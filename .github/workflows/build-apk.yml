@@ -142,11 +142,11 @@ jobs:
           fi
 
       - name: Create GitHub Release
-        if: steps:release_check.outputs.should_release == 'true'
+        if: steps.release_check.outputs.should_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps:release_check.outputs.tag_name }}
-          name: Habit Tracker Release ${{ steps:release_check.outputs.tag_name }}
+          tag_name: ${{ steps.release_check.outputs.tag_name }}
+          name: Habit Tracker Release ${{ steps.release_check.outputs.tag_name }}
           draft: false
           prerelease: false
           files: |
