@@ -35,6 +35,9 @@ interface HabitDao {
     @Delete
     suspend fun deleteHabit(habit: Habit)
 
+    @Query("DELETE FROM habits")
+    suspend fun deleteAllHabits()
+
     @Query("SELECT COUNT(*) FROM habits")
     suspend fun getHabitCount(): Int
 }
@@ -64,6 +67,9 @@ interface HabitLogDao {
 
     @Query("DELETE FROM habit_logs WHERE habitId = :habitId")
     suspend fun deleteAllLogsForHabit(habitId: Long)
+
+    @Query("DELETE FROM habit_logs")
+    suspend fun deleteAllLogs()
 }
 
 @Dao
@@ -88,6 +94,9 @@ interface HabitNoteDao {
 
     @Query("DELETE FROM habit_notes WHERE habitId = :habitId")
     suspend fun deleteAllNotesForHabit(habitId: Long)
+
+    @Query("DELETE FROM habit_notes")
+    suspend fun deleteAllNotes()
 }
 
 @Dao
@@ -109,4 +118,7 @@ interface HabitReminderDao {
 
     @Query("DELETE FROM habit_reminders WHERE habitId = :habitId")
     suspend fun deleteAllRemindersForHabit(habitId: Long)
+
+    @Query("DELETE FROM habit_reminders")
+    suspend fun deleteAllReminders()
 }

@@ -372,6 +372,104 @@ fun SettingsScreen(
                 }
             }
 
+            // Room Database Management
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(22.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = CardDefaults.outlinedCardBorder()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp)
+                    ) {
+                        Text(
+                            text = "Room Database Management",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        )
+                        Text(
+                            text = "Manage local SQLite persistent data on this device",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Clear Database Button
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFF231719))
+                                .border(1.dp, Color(0xFF4A2026), RoundedCornerShape(12.dp))
+                                .clickable {
+                                    viewModel.clearAllData()
+                                    Toast.makeText(context, "Room database cleared! Starting blank.", Toast.LENGTH_SHORT).show()
+                                }
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Clear All Data (Start Blank)",
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFFF6B6B)
+                                    )
+                                )
+                                Text(
+                                    text = "Deletes all stored habits, logs, and notes",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = Color(0xFFC78282)
+                                    )
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Reload Demo Habits Button
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFF161E28))
+                                .border(1.dp, Color(0xFF233B54), RoundedCornerShape(12.dp))
+                                .clickable {
+                                    viewModel.reloadSampleData()
+                                    Toast.makeText(context, "Demo habits & contribution grids reloaded!", Toast.LENGTH_SHORT).show()
+                                }
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Reload Demo Habits",
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF4DABF7)
+                                    )
+                                )
+                                Text(
+                                    text = "Restores sample habits matching design screenshots",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = Color(0xFF7FA7C7)
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             // Data Export / Backup
             item {
                 Card(

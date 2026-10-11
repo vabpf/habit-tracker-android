@@ -121,8 +121,24 @@ class HabitRepository(
         habitReminderDao.deleteReminder(reminderId)
     }
 
+    suspend fun clearAllData() {
+        habitDao.deleteAllHabits()
+        habitLogDao.deleteAllLogs()
+        habitNoteDao.deleteAllNotes()
+        habitReminderDao.deleteAllReminders()
+    }
+
+    suspend fun reloadSampleData() {
+        clearAllData()
+        seedDataInternal()
+    }
+
     suspend fun seedInitialDataIfEmpty() {
         if (habitDao.getHabitCount() > 0) return
+        seedDataInternal()
+    }
+
+    private suspend fun seedDataInternal() {
 
         val initialHabits = listOf(
             Habit(

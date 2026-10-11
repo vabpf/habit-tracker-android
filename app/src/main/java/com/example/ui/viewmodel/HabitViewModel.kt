@@ -177,6 +177,21 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun clearAllData() {
+        viewModelScope.launch {
+            repository.clearAllData()
+            _selectedHabitId.value = null
+            _currentScreen.value = AppScreen.DASHBOARD
+        }
+    }
+
+    fun reloadSampleData() {
+        viewModelScope.launch {
+            repository.reloadSampleData()
+            _currentScreen.value = AppScreen.DASHBOARD
+        }
+    }
+
     // Notes
     fun getNotesForHabit(habitId: Long) = repository.getNotesForHabit(habitId)
 
