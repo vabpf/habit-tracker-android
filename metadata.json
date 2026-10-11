@@ -1,0 +1,6 @@
+{
+  "name": "Habit Tracker",
+  "description": "A beautiful, private-by-design habit tracker with customizable contribution tile grids, streaks, flexible tracking types, notes, reminders, and dark/AMOLED aesthetics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

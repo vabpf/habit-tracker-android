@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Center card background (60x60 centered from 24,24 to 84,84) -->
+    <path
+        android:fillColor="#22252C"
+        android:pathData="M38,24 h32 c7.7,0 14,6.3 14,14 v32 c0,7.7 -6.3,14 -14,14 h-32 c-7.7,0 -14,-6.3 -14,-14 v-32 c0,-7.7 6.3,-14 14,-14 Z" />
+
+    <!-- 4x4 Habit Grid Tiles inside card -->
+    <!-- Row 1 -->
+    <path
+        android:fillColor="#80E055"
+        android:pathData="M31,31 h7 c1.5,0 2.5,1 2.5,2.5 v7 c0,1.5 -1,2.5 -2.5,2.5 h-7 c-1.5,0 -2.5,-1 -2.5,-2.5 v-7 c0,-1.5 1,-2.5 2.5,-2.5 Z" />
+    <path
+        android:fillColor="#80E055"
+        android:pathData="M43,31 h7 c1.5,0 2.5,1 2.5,2.5 v7 c0,1.5 -1,2.5 -2.5,2.5 h-7 c-1.5,0 -2.5,-1 -2.5,-2.5 v-7 c0,-1.5 1,-2.5 2.5,-2.5 Z" />
+    <path
+        android:fillColor="#2BD1EA"
+        android:pathData="M55,31 h7 c1.5,0 2.5,1 2.5,2.5 v7 c0,1.5 -1,2.5 -2.5,2.5 h-7 c-1.5,0 -2.5,-1 -2.5,-2.5 v-7 c0,-1.5 1,-2.5 2.5,-2.5 Z" />
+    <path
+        android:fillColor="#2BD1EA"
+        android:pathData="M67,31 h7 c1.5,0 2.5,1 2.5,2.5 v7 c0,1.5 -1,2.5 -2.5,2.5 h-7 c-1.5,0 -2.5,-1 -2.5,-2.5 v-7 c0,-1.5 1,-2.5 2.5,-2.5 Z" />
+
+    <!-- Row 2 -->
+    <path
+        android:fillColor="#80E055"
+        android:pathData="M31,43 h7 c1.5,0 2.5,1 2.5,2.5 v7 c0,1.5 -1,2.5 -2.5,2.5 h-7 c-1.5,0 -2.5,-1 -2.5,-2.5 v-7 c0,-1.5 1,-2.5 2.5,-2.5 Z" />
+    <path
+        android:fillColor="#343842"
+        android:pathData="M43,43 h7 c1.5,0 2.5,1 2.5,2.5 v7 c0,1.5 -1,2.5 -2.5,2.5 h-7 c-1.5,0 -2.5,-1 -2.5,-2.5 v-7 c0,-1.5 1,-2.5 2.5,-2.5 Z" />
+    <path
+        android:fillColor="#2BD1EA"
+        android:pathData="M55,43 h7 c1.5,0 2.5,1 2.5,2.5 v7 c0,1.5 -1,2.5 -2.5,2.5 h-7 c-1.5,0 -2.5,-1 -2.5,-2.5 v-7 c0,-1.5 1,-2.5 2.5,-2.5 Z" />
+    <path
+        android:fillColor="#2BD1EA"
+        android:pathData="M67,43 h7 c1.5,0 2.5,1 2.5,2.5 v7 c0,1.5 -1,2.5 -2.5,2.5 h-7 c-1.5,0 -2.5,-1 -2.5,-2.5 v-7 c0,-1.5 1,-2.5 2.5,-2.5 Z" />
+
+    <!-- Row 3 -->
+    <path
+        android:fillColor="#FFA53C"
+        android:pathData="M31,55 h7 c1.5,0 2.5,1 2.5,2.5 v7 c0,1.5 -1,2.5 -2.5,2.5 h-7 c-1.5,0 -2.5,-1 -2.5,-2.5 v-7 c0,-1.5 1,-2.5 2.5,-2.5 Z" />
+    <path
+        android:fillColor="#FFA53C"
+        android:pathData="M43,55 h7 c1.5,0 2.5,1 2.5,2.5 v7 c0,1.5 -1,2.5 -2.5,2.5 h-7 c-1.5,0 -2.5,-1 -2.5,-2.5 v-7 c0,-1.5 1,-2.5 2.5,-2.5 Z" />
+    <path
+        android:fillColor="#343842"
+        android:pathData="M55,55 h7 c1.5,0 2.5,1 2.5,2.5 v7 c0,1.5 -1,2.5 -2.5,2.5 h-7 c-1.5,0 -2.5,-1 -2.5,-2.5 v-7 c0,-1.5 1,-2.5 2.5,-2.5 Z" />
+    <path
+        android:fillColor="#9D8DF1"
+        android:pathData="M67,55 h7 c1.5,0 2.5,1 2.5,2.5 v7 c0,1.5 -1,2.5 -2.5,2.5 h-7 c-1.5,0 -2.5,-1 -2.5,-2.5 v-7 c0,-1.5 1,-2.5 2.5,-2.5 Z" />
+
+    <!-- Row 4 -->
+    <path
+        android:fillColor="#FFA53C"
+        android:pathData="M31,67 h7 c1.5,0 2.5,1 2.5,2.5 v7 c0,1.5 -1,2.5 -2.5,2.5 h-7 c-1.5,0 -2.5,-1 -2.5,-2.5 v-7 c0,-1.5 1,-2.5 2.5,-2.5 Z" />
+    <path
+        android:fillColor="#FFA53C"
+        android:pathData="M43,67 h7 c1.5,0 2.5,1 2.5,2.5 v7 c0,1.5 -1,2.5 -2.5,2.5 h-7 c-1.5,0 -2.5,-1 -2.5,-2.5 v-7 c0,-1.5 1,-2.5 2.5,-2.5 Z" />
+    <path
+        android:fillColor="#9D8DF1"
+        android:pathData="M55,67 h7 c1.5,0 2.5,1 2.5,2.5 v7 c0,1.5 -1,2.5 -2.5,2.5 h-7 c-1.5,0 -2.5,-1 -2.5,-2.5 v-7 c0,-1.5 1,-2.5 2.5,-2.5 Z" />
+    <path
+        android:fillColor="#9D8DF1"
+        android:pathData="M67,67 h7 c1.5,0 2.5,1 2.5,2.5 v7 c0,1.5 -1,2.5 -2.5,2.5 h-7 c-1.5,0 -2.5,-1 -2.5,-2.5 v-7 c0,-1.5 1,-2.5 2.5,-2.5 Z" />
+</vector>
