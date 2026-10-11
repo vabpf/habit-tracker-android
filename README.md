@@ -157,10 +157,11 @@ Switch seamlessly between views via the bottom floating pill:
 
 Automated GitHub Actions workflows are located in `.github/workflows/`:
 
-- **Build APK & GitHub Release (`build-apk.yml`)**:
+- **Build Release APK (`build-apk.yml`)**:
   - Triggers on pushes to `main` / `master` and tags matching `v*`.
-  - Automatically compiles both **Release APK** and **Debug APK**.
-  - When a release tag is pushed (e.g., `git tag v1.0.0 && git push --tags`), it creates a **GitHub Release** with both APKs attached.
+  - Compiles the optimized production **Release APK** (`HabitTracker-release.apk`).
+  - **Consistent Signing Key for App Updates**: Utilizes a permanent 10,000-day RSA signing key (`release.keystore.base64`, or your custom `KEYSTORE_BASE64` secret), ensuring that every single build and release shares the **exact same cryptographic certificate**. This allows users to seamlessly update their installed app without signature conflict errors.
+  - When a release tag is pushed (e.g., `git tag v1.0.0 && git push --tags`), it creates a **GitHub Release** with `HabitTracker-release.apk` attached.
   - Can be manually dispatched from the **Actions** tab in GitHub with a custom tag.
 - **PR Checks (`ci-checks.yml`)**:
   - Validates all pull requests with JVM unit and Robolectric tests.

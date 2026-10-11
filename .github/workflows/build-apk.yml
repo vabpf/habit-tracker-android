@@ -1,4 +1,4 @@
-name: Build APK & Release
+name: Build Release APK
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       create_github_release:
-        description: 'Create a GitHub Release with APKs attached'
+        description: 'Create a GitHub Release with the Release APK attached'
         required: false
         type: boolean
         default: false
@@ -22,7 +22,7 @@ on:
 
 jobs:
   build:
-    name: Build & Package APK
+    name: Build Release APK
     runs-on: ubuntu-latest
 
     steps:
@@ -31,12 +31,22 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
           cache: 'gradle'
+
+      - name: Cache Robolectric SDK jars
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/robolectric
+            ~/.m2/repository/org/robolectric
+          key: ${{ runner.os }}-robolectric-${{ hashFiles('**/libs.versions.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-robolectric-
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -51,36 +61,28 @@ jobs:
             cp .env.example .env
           fi
 
-      - name: Prepare Keystores for Signing
+      - name: Setup Consistent Signing Keystore
         env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-          KEYSTORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          CUSTOM_KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          CUSTOM_STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          CUSTOM_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          # 1. Setup Debug Keystore
-          if [ -f "debug.keystore.base64" ]; then
-            base64 -d debug.keystore.base64 > debug.keystore
-          else
-            keytool -genkeypair -v \
-              -keystore debug.keystore \
-              -alias androiddebugkey \
-              -keyalg RSA \
-              -keysize 2048 \
-              -validity 10000 \
-              -storepass android \
-              -keypass android \
-              -dname "CN=Android Debug,O=Android,C=US"
-          fi
-
-          # 2. Setup Release Keystore
-          if [ -n "$KEYSTORE_BASE64" ]; then
-            echo "Decoding secret release keystore..."
-            echo "$KEYSTORE_BASE64" | base64 -d > my-upload-key.jks
+          # Priority 1: User-configured GitHub Secrets
+          if [ -n "$CUSTOM_KEYSTORE_BASE64" ]; then
+            echo "Using custom GitHub Secret release keystore..."
+            echo "$CUSTOM_KEYSTORE_BASE64" | base64 -d > my-upload-key.jks
             echo "KEYSTORE_PATH=$GITHUB_WORKSPACE/my-upload-key.jks" >> $GITHUB_ENV
-            echo "STORE_PASSWORD=${KEYSTORE_PASSWORD:-android}" >> $GITHUB_ENV
-            echo "KEY_PASSWORD=${KEY_PASSWORD:-android}" >> $GITHUB_ENV
+            echo "STORE_PASSWORD=${CUSTOM_STORE_PASSWORD}" >> $GITHUB_ENV
+            echo "KEY_PASSWORD=${CUSTOM_KEY_PASSWORD}" >> $GITHUB_ENV
+          # Priority 2: Permanent repository release keystore (consistent certificate for seamless app updates)
+          elif [ -f "release.keystore.base64" ]; then
+            echo "Using repository release.keystore.base64..."
+            base64 -d release.keystore.base64 > my-upload-key.jks
+            echo "KEYSTORE_PATH=$GITHUB_WORKSPACE/my-upload-key.jks" >> $GITHUB_ENV
+            echo "STORE_PASSWORD=habittracker2026" >> $GITHUB_ENV
+            echo "KEY_PASSWORD=habittracker2026" >> $GITHUB_ENV
           else
-            echo "Generating build-time release keystore fallback..."
+            echo "Fallback: generating temporary key..."
             keytool -genkeypair -v \
               -keystore my-upload-key.jks \
               -alias upload \
@@ -89,7 +91,7 @@ jobs:
               -validity 10000 \
               -storepass android \
               -keypass android \
-              -dname "CN=Habit Tracker,OU=Mobile,O=AIStudio,L=MountainView,S=CA,C=US"
+              -dname "CN=Habit Tracker,O=HabitTracker,C=US"
             echo "KEYSTORE_PATH=$GITHUB_WORKSPACE/my-upload-key.jks" >> $GITHUB_ENV
             echo "STORE_PASSWORD=android" >> $GITHUB_ENV
             echo "KEY_PASSWORD=android" >> $GITHUB_ENV
@@ -98,17 +100,14 @@ jobs:
       - name: Run Unit Tests
         run: ./gradlew testDebugUnitTest --continue
 
-      - name: Build Release & Debug APKs
-        run: ./gradlew assembleRelease assembleDebug --stacktrace
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --stacktrace
 
-      - name: Rename APKs for Clarity
+      - name: Stage Release APK
         run: |
           mkdir -p output_apks
           if [ -f "app/build/outputs/apk/release/app-release.apk" ]; then
             cp app/build/outputs/apk/release/app-release.apk output_apks/HabitTracker-release.apk
-          fi
-          if [ -f "app/build/outputs/apk/debug/app-debug.apk" ]; then
-            cp app/build/outputs/apk/debug/app-debug.apk output_apks/HabitTracker-debug.apk
           fi
 
       - name: Upload Release APK Artifact
@@ -116,14 +115,7 @@ jobs:
         with:
           name: HabitTracker-Release-APK
           path: output_apks/HabitTracker-release.apk
-          if-no-files-found: warn
-
-      - name: Upload Debug APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: HabitTracker-Debug-APK
-          path: output_apks/HabitTracker-debug.apk
-          if-no-files-found: warn
+          if-no-files-found: error
 
       - name: Determine Release Eligibility
         id: release_check
@@ -146,18 +138,15 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release_check.outputs.tag_name }}
-          name: Habit Tracker Release ${{ steps.release_check.outputs.tag_name }}
+          name: Habit Tracker ${{ steps.release_check.outputs.tag_name }}
           draft: false
           prerelease: false
-          files: |
-            output_apks/HabitTracker-release.apk
-            output_apks/HabitTracker-debug.apk
+          files: output_apks/HabitTracker-release.apk
           body: |
             ### Habit Tracker Release
             
-            **What's Included:**
-            - **HabitTracker-release.apk**: Optimized standalone release build.
-            - **HabitTracker-debug.apk**: Debug build with debugging symbols enabled.
+            **Download:**
+            - **[HabitTracker-release.apk](output_apks/HabitTracker-release.apk)**: Signed production release APK with consistent certificate for seamless updates.
             
             **Features:**
             - Contribution Tile Grid visualization (GitHub-style habit matrix)
