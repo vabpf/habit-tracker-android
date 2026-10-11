@@ -24,10 +24,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -181,6 +183,23 @@ fun HabitDetailScreen(
                                 contentDescription = "Notes",
                                 tint = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        // Archive / Restore button
+                        IconButton(
+                            onClick = { viewModel.toggleArchiveHabit(habit) },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF1E212A))
+                                .testTag("archive_habit_button")
+                        ) {
+                            Icon(
+                                imageVector = if (habit.isArchived) Icons.Filled.Unarchive else Icons.Filled.Archive,
+                                contentDescription = if (habit.isArchived) "Restore Habit" else "Archive Habit",
+                                tint = if (habit.isArchived) Color(0xFFFCC419) else MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(18.dp)
                             )
                         }
 

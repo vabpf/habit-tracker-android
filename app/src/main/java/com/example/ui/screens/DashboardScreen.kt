@@ -95,7 +95,8 @@ fun DashboardScreen(
         (4 downTo 0).map { today.minusDays(it.toLong()) }
     }
 
-    val categories = listOf("All", "Fitness", "Health", "Mind", "Hobbies")
+    val uiState by viewModel.uiState.collectAsState()
+    val categories = uiState.availableCategories
 
     Box(
         modifier = modifier

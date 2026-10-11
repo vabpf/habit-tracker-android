@@ -9,6 +9,7 @@ import com.example.data.model.HabitLog
 import com.example.data.model.HabitNote
 import com.example.data.model.HabitReminder
 import com.example.data.model.HabitType
+import com.example.data.model.TrackingType
 import com.example.data.repository.HabitRepository
 import com.example.ui.theme.ThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +20,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
@@ -48,6 +48,26 @@ data class HabitStats(
     val monthlyData: List<Pair<String, Int>>
 )
 
+/**
+ * Unified UI State representation for Habit Tracker
+ */
+data class HabitUiState(
+    val habits: List<Habit> = emptyList(),
+    val filteredHabits: List<Habit> = emptyList(),
+    val allLogs: List<HabitLog> = emptyList(),
+    val selectedCategory: String = "All",
+    val availableCategories: List<String> = listOf("All", "Fitness", "Health", "Mind", "Hobbies", "Archived"),
+    val selectedHabitId: Long? = null,
+    val selectedHabit: Habit? = null,
+    val viewMode: DashboardViewMode = DashboardViewMode.CLASSIC,
+    val selectedYear: Int = LocalDate.now().year,
+    val themeMode: ThemeMode = ThemeMode.AMOLED,
+    val currentScreen: AppScreen = AppScreen.DASHBOARD,
+    val editingHabit: Habit? = null,
+    val isLoading: Boolean = false,
+    val userMessage: String? = null
+)
+
 class HabitViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: HabitRepository
@@ -66,47 +86,91 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Navigation State
+    // Navigation & Screen State
     private val _currentScreen = MutableStateFlow(AppScreen.DASHBOARD)
     val currentScreen: StateFlow<AppScreen> = _currentScreen.asStateFlow()
 
     private val _selectedHabitId = MutableStateFlow<Long?>(null)
     val selectedHabitId: StateFlow<Long?> = _selectedHabitId.asStateFlow()
 
-    // Dashboard View Mode: Classic, Compact, Split
     private val _viewMode = MutableStateFlow(DashboardViewMode.CLASSIC)
     val viewMode: StateFlow<DashboardViewMode> = _viewMode.asStateFlow()
 
-    // Selected Category Filter
     private val _selectedCategory = MutableStateFlow("All")
     val selectedCategory: StateFlow<String> = _selectedCategory.asStateFlow()
 
-    // Selected Year for Analytics
     private val _selectedYear = MutableStateFlow(LocalDate.now().year)
     val selectedYear: StateFlow<Int> = _selectedYear.asStateFlow()
 
-    // Theme Mode
     private val _themeMode = MutableStateFlow(ThemeMode.AMOLED)
     val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
 
-    // Habit currently being edited (or null for creating new)
     private val _editingHabit = MutableStateFlow<Habit?>(null)
     val editingHabit: StateFlow<Habit?> = _editingHabit.asStateFlow()
 
-    // All Habits
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _userMessage = MutableStateFlow<String?>(null)
+    val userMessage: StateFlow<String?> = _userMessage.asStateFlow()
+
+    // Habits stream from Room
     val allHabits: StateFlow<List<Habit>> = repository.allHabits
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // All Logs
+    val allHabitsIncludingArchived: StateFlow<List<Habit>> = repository.allHabitsIncludingArchived
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val allLogs: StateFlow<List<HabitLog>> = repository.allLogs
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // Filtered Habits based on Category
-    val filteredHabits: StateFlow<List<Habit>> = combine(allHabits, _selectedCategory) { habits, category ->
-        if (category == "All") habits
-        else habits.filter { it.category.equals(category, ignoreCase = true) }
+    // Filtered Habits based on Category and Archive status
+    val filteredHabits: StateFlow<List<Habit>> = combine(
+        allHabitsIncludingArchived,
+        _selectedCategory
+    ) { habits, category ->
+        when (category) {
+            "All" -> habits.filter { !it.isArchived }
+            "Archived" -> habits.filter { it.isArchived }
+            else -> habits.filter { !it.isArchived && it.category.equals(category, ignoreCase = true) }
+        }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // Single Unified UI State via StateFlow
+    val uiState: StateFlow<HabitUiState> = combine(
+        allHabitsIncludingArchived,
+        allLogs,
+        _selectedCategory,
+        _selectedHabitId,
+        _viewMode
+    ) { habits, logs, category, selectedId, vMode ->
+        val filtered = when (category) {
+            "All" -> habits.filter { !it.isArchived }
+            "Archived" -> habits.filter { it.isArchived }
+            else -> habits.filter { !it.isArchived && it.category.equals(category, ignoreCase = true) }
+        }
+        HabitUiState(
+            habits = habits,
+            filteredHabits = filtered,
+            allLogs = logs,
+            selectedCategory = category,
+            selectedHabitId = selectedId,
+            selectedHabit = habits.firstOrNull { it.id == selectedId },
+            viewMode = vMode,
+            selectedYear = _selectedYear.value,
+            themeMode = _themeMode.value,
+            currentScreen = _currentScreen.value,
+            editingHabit = _editingHabit.value,
+            isLoading = _isLoading.value,
+            userMessage = _userMessage.value
+        )
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        HabitUiState()
+    )
+
+    // Navigation Actions
     fun navigateTo(screen: AppScreen, habitId: Long? = null) {
         if (habitId != null) {
             _selectedHabitId.value = habitId
@@ -130,6 +194,11 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
         _selectedYear.value = year
     }
 
+    fun clearUserMessage() {
+        _userMessage.value = null
+    }
+
+    // CRUD: CREATE & UPDATE
     fun startCreateHabit() {
         _editingHabit.value = null
         navigateTo(AppScreen.EDIT_HABIT)
@@ -140,7 +209,92 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
         navigateTo(AppScreen.EDIT_HABIT, habit.id)
     }
 
-    // Toggle today or specified date
+    fun saveHabit(habit: Habit) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val id = repository.saveHabit(habit)
+                _selectedHabitId.value = id
+                _userMessage.value = "Habit saved successfully"
+                _currentScreen.value = AppScreen.DASHBOARD
+            } catch (e: Exception) {
+                _userMessage.value = "Failed to save habit: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun createHabit(
+        name: String,
+        description: String = "",
+        iconName: String = "check",
+        colorHex: Long = 0xFF8AE034,
+        habitType: HabitType = HabitType.BUILD,
+        trackingType: TrackingType = TrackingType.YES_NO,
+        targetValue: Float = 1.0f,
+        unit: String = "",
+        frequencyDaysPerWeek: Int = 7,
+        category: String = "Health"
+    ) {
+        val nextOrder = (allHabits.value.maxOfOrNull { it.displayOrder } ?: 0) + 1
+        val newHabit = Habit(
+            name = name,
+            description = description,
+            iconName = iconName,
+            colorHex = colorHex,
+            habitType = habitType,
+            trackingType = trackingType,
+            targetValue = targetValue,
+            unit = unit,
+            frequencyDaysPerWeek = frequencyDaysPerWeek,
+            category = category,
+            displayOrder = nextOrder
+        )
+        saveHabit(newHabit)
+    }
+
+    // CRUD: DELETE
+    fun deleteHabit(habit: Habit) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                repository.deleteHabit(habit)
+                if (_selectedHabitId.value == habit.id) {
+                    _selectedHabitId.value = null
+                }
+                _userMessage.value = "Habit deleted"
+                _currentScreen.value = AppScreen.DASHBOARD
+            } catch (e: Exception) {
+                _userMessage.value = "Failed to delete habit: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    // ARCHIVE & UNARCHIVE
+    fun toggleArchiveHabit(habit: Habit) {
+        viewModelScope.launch {
+            val newArchivedStatus = !habit.isArchived
+            repository.setHabitArchived(habit.id, newArchivedStatus)
+            _userMessage.value = if (newArchivedStatus) "Habit archived" else "Habit restored"
+        }
+    }
+
+    // REORDERING
+    fun moveHabit(fromIndex: Int, toIndex: Int) {
+        val currentList = filteredHabits.value.toMutableList()
+        if (fromIndex in currentList.indices && toIndex in currentList.indices) {
+            val moved = currentList.removeAt(fromIndex)
+            currentList.add(toIndex, moved)
+            viewModelScope.launch {
+                repository.reorderHabits(currentList)
+            }
+        }
+    }
+
+    // LOGS & PROGRESS CRUD
     fun toggleHabitDay(habit: Habit, date: LocalDate = LocalDate.now()) {
         val dateStr = date.format(DateTimeFormatter.ISO_LOCAL_DATE)
         viewModelScope.launch {
@@ -162,37 +316,7 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun saveHabit(habit: Habit) {
-        viewModelScope.launch {
-            val id = repository.saveHabit(habit)
-            _selectedHabitId.value = id
-            _currentScreen.value = AppScreen.DASHBOARD
-        }
-    }
-
-    fun deleteHabit(habit: Habit) {
-        viewModelScope.launch {
-            repository.deleteHabit(habit)
-            _currentScreen.value = AppScreen.DASHBOARD
-        }
-    }
-
-    fun clearAllData() {
-        viewModelScope.launch {
-            repository.clearAllData()
-            _selectedHabitId.value = null
-            _currentScreen.value = AppScreen.DASHBOARD
-        }
-    }
-
-    fun reloadSampleData() {
-        viewModelScope.launch {
-            repository.reloadSampleData()
-            _currentScreen.value = AppScreen.DASHBOARD
-        }
-    }
-
-    // Notes
+    // NOTES CRUD
     fun getNotesForHabit(habitId: Long) = repository.getNotesForHabit(habitId)
 
     fun saveNote(habitId: Long, date: LocalDate, content: String, noteId: Long = 0L) {
@@ -206,31 +330,53 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
                     content = content
                 )
             )
+            _userMessage.value = "Note saved"
         }
     }
 
     fun deleteNote(noteId: Long) {
         viewModelScope.launch {
             repository.deleteNote(noteId)
+            _userMessage.value = "Note deleted"
         }
     }
 
-    // Reminders
+    // REMINDERS CRUD
     fun getRemindersForHabit(habitId: Long) = repository.getRemindersForHabit(habitId)
 
     fun saveReminder(reminder: HabitReminder) {
         viewModelScope.launch {
             repository.saveReminder(reminder)
+            _userMessage.value = "Reminder updated"
         }
     }
 
     fun deleteReminder(reminderId: Long) {
         viewModelScope.launch {
             repository.deleteReminder(reminderId)
+            _userMessage.value = "Reminder removed"
         }
     }
 
-    // Streak & Stats Calculations
+    // DATABASE MANAGEMENT
+    fun clearAllData() {
+        viewModelScope.launch {
+            repository.clearAllData()
+            _selectedHabitId.value = null
+            _userMessage.value = "Database cleared"
+            _currentScreen.value = AppScreen.DASHBOARD
+        }
+    }
+
+    fun reloadSampleData() {
+        viewModelScope.launch {
+            repository.reloadSampleData()
+            _userMessage.value = "Demo habits reloaded"
+            _currentScreen.value = AppScreen.DASHBOARD
+        }
+    }
+
+    // STREAK & STATS COMPUTATIONS
     fun calculateStats(habit: Habit, logs: List<HabitLog>, year: Int = LocalDate.now().year): HabitStats {
         val habitLogs = logs.filter { it.habitId == habit.id }
         val formatter = DateTimeFormatter.ISO_LOCAL_DATE
@@ -241,7 +387,6 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
         // Current Streak
         var currentStreak = 0
         var checkDate = today
-        // If today is not logged yet, start checking from yesterday
         val todayStr = today.format(formatter)
         val todayLog = logMap[todayStr]
         val todayCompleted = if (habit.habitType == HabitType.QUIT) {
@@ -254,7 +399,6 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
             currentStreak++
             checkDate = today.minusDays(1)
         } else {
-            // Check yesterday
             val yesterday = today.minusDays(1)
             val yesterdayStr = yesterday.format(formatter)
             val yesterdayLog = logMap[yesterdayStr]
@@ -266,7 +410,7 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
             if (yesterdayCompleted) {
                 checkDate = yesterday
             } else {
-                checkDate = today // Streak broken
+                checkDate = today
             }
         }
 
@@ -289,7 +433,7 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
 
-        // Best Streak (scan past 365 days)
+        // Best Streak (past 365 days)
         var bestStreak = 0
         var tempStreak = 0
         val startDate = today.minusDays(365)
@@ -318,7 +462,6 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
             it.date.startsWith("$year-") && it.isCompleted
         }
         val totalCompletions = if (habit.habitType == HabitType.QUIT) {
-            // Count clean days in year up to today
             val daysInYearSoFar = if (year == today.year) today.dayOfYear else 365
             val slips = habitLogs.count { it.date.startsWith("$year-") && it.value > 0f }
             (daysInYearSoFar - slips).coerceAtLeast(0)

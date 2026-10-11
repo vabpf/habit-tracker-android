@@ -17,6 +17,9 @@ interface HabitDao {
     @Query("SELECT * FROM habits WHERE isArchived = 0 ORDER BY displayOrder ASC, id ASC")
     fun getAllHabits(): Flow<List<Habit>>
 
+    @Query("SELECT * FROM habits ORDER BY isArchived ASC, displayOrder ASC, id ASC")
+    fun getAllHabitsIncludingArchived(): Flow<List<Habit>>
+
     @Query("SELECT * FROM habits WHERE id = :id")
     fun getHabitById(id: Long): Flow<Habit?>
 
@@ -31,6 +34,15 @@ interface HabitDao {
 
     @Update
     suspend fun updateHabit(habit: Habit)
+
+    @Update
+    suspend fun updateHabits(habits: List<Habit>)
+
+    @Query("UPDATE habits SET isArchived = :isArchived WHERE id = :id")
+    suspend fun updateArchiveStatus(id: Long, isArchived: Boolean)
+
+    @Query("UPDATE habits SET displayOrder = :displayOrder WHERE id = :id")
+    suspend fun updateHabitOrder(id: Long, displayOrder: Int)
 
     @Delete
     suspend fun deleteHabit(habit: Habit)

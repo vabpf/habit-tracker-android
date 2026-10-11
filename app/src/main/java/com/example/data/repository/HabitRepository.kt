@@ -22,6 +22,7 @@ class HabitRepository(
     private val habitReminderDao: HabitReminderDao
 ) {
     val allHabits: Flow<List<Habit>> = habitDao.getAllHabits()
+    val allHabitsIncludingArchived: Flow<List<Habit>> = habitDao.getAllHabitsIncludingArchived()
     val allLogs: Flow<List<HabitLog>> = habitLogDao.getAllLogs()
 
     fun getHabit(id: Long): Flow<Habit?> = habitDao.getHabitById(id)
@@ -36,6 +37,17 @@ class HabitRepository(
             habitDao.updateHabit(habit)
             habit.id
         }
+    }
+
+    suspend fun setHabitArchived(habitId: Long, isArchived: Boolean) {
+        habitDao.updateArchiveStatus(habitId, isArchived)
+    }
+
+    suspend fun reorderHabits(habits: List<Habit>) {
+        val updated = habits.mapIndexed { index, habit ->
+            habit.copy(displayOrder = index)
+        }
+        habitDao.updateHabits(updated)
     }
 
     suspend fun deleteHabit(habit: Habit) {
