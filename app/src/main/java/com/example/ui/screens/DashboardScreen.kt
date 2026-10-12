@@ -68,8 +68,10 @@ import com.example.ui.components.CompactHabitRow
 import com.example.ui.components.HabitActionButton
 import com.example.ui.components.HabitCard
 import com.example.ui.components.HabitIconCatalog
+import com.example.ui.util.LocalBackdrop
 import com.example.ui.util.glassEffect
 import com.example.ui.util.softDropShadow
+import com.kyant.backdrop.backdrops.layerBackdrop
 import com.example.ui.theme.BrandPrimary
 import com.example.ui.viewmodel.AppScreen
 import com.example.ui.viewmodel.DashboardViewMode
@@ -115,6 +117,15 @@ fun DashboardScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
+        // Backdrop node: everything the floating nav bar samples (live blur
+        // + lens). The nav bar itself stays OUTSIDE this node as a later
+        // sibling — sampling from inside would recurse on itself.
+        val backdrop = LocalBackdrop.current
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .then(if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier)
+        ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -557,12 +568,11 @@ fun DashboardScreen(
                 }
             }
         }
+        }
 
         // Floating Pill View Mode Switcher at bottom center (Screenshot 1 & 2)
-        // Glass finish per SpendSense recipe: static frost (tint + sheen +
-        // gradient border) + soft drop shadow. Single hero element, so no
-        // list-virtualization concern. Live Backdrop blur intentionally
-        // deferred until compileSdk 37 + AGP 9.2 upgrade.
+        // Live Backdrop glass: vibrancy + 7dp blur + 26dp lens refraction,
+        // sampling the content node above.
         val navBarShape = RoundedCornerShape(26.dp)
         Box(
             modifier = Modifier

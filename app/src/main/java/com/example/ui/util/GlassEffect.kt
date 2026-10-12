@@ -1,8 +1,11 @@
 package com.example.ui.util
 
-import androidx.compose.foundation.background
+import android.graphics.Paint as AndroidPaint
+import android.os.Build
 import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -16,7 +19,14 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import android.graphics.Paint as AndroidPaint
+import androidx.compose.foundation.shape.CornerBasedShape
+import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
+
+val LocalBackdrop = compositionLocalOf<Backdrop?> { null }
 
 /**
  * Frost glass tokens, ported from SpendSense `FrostGlassDefaults`
@@ -25,7 +35,7 @@ import android.graphics.Paint as AndroidPaint
  */
 object FrostGlassDefaults {
     val containerColor: Color = Color(0xFF16181F).copy(alpha = 0.72f)
-    val liveBlurContainerColor: Color = Color(0xFF16181F).copy(alpha = 0.65f)
+    val liveBlurContainerColor: Color = Color(0xFF16181F).copy(alpha = 0.60f)
     val borderWidth: Dp = 1.dp
     const val borderAlpha: Float = 0.22f
     const val sheenAlpha: Float = 0.10f
@@ -33,21 +43,18 @@ object FrostGlassDefaults {
 }
 
 /**
- * Static-frost glass effect for Habit Tracker.
+ * Premium frosted glass effect with real live-blur backdrop sampling via
+ * `io.github.kyant0:backdrop`:
+ * - Live path (`liveBlur = true` + backdrop available): GPU pipeline
+ *   `vibrancy() → blur(7dp) → lens(26dp)` on API 33+, plus frosted tint,
+ *   specular sheen and gradient border.
+ * - Static path: lightweight tint + sheen + border, zero offscreen buffers
+ *   (for list rows / large cards — see Tiered Virtualization: `useLens`
+ *   only on ~3–5 small hero elements such as this nav bar).
  *
- * Same funnel signature as SpendSense `Modifier.glassEffect()` so a future
- * migration to `io.github.kyant0:backdrop` is drop-in. The live-blur pipeline
- * (`vibrancy + blur + lens`) is intentionally NOT wired here: Backdrop 2.0.1
- * requires compileSdk 37 + AGP 9.2, while this app is on compileSdk 36 +
- * AGP 9.1.1 — adding it now would break `assembleRelease` on the
- * `checkAarMetadata` task (same failure documented in SpendSense
- * `docs/backdrop-migration-status.md`). The static path (tint + sheen +
- * gradient border, zero offscreen buffers) is the guideline's recommended
- * fallback and is plenty for a single floating nav bar.
- *
- * @param liveBlur / @param useLens / @param backdrop accepted for
- * source-compat with the SpendSense recipe; currently only select the tint
- * alpha (live = 0.65, static = 0.72). Ignored beyond that.
+ * @param backdrop Optional explicit [Backdrop] to sample (defaults to
+ * [LocalBackdrop.current]). The sampler must sit OUTSIDE the
+ * `layerBackdrop` node it samples, as a later sibling.
  */
 @Composable
 fun Modifier.glassEffect(
@@ -56,22 +63,44 @@ fun Modifier.glassEffect(
     borderWidth: Dp = FrostGlassDefaults.borderWidth,
     borderAlpha: Float = FrostGlassDefaults.borderAlpha,
     sheenAlpha: Float = FrostGlassDefaults.sheenAlpha,
+    prismAlpha: Float = FrostGlassDefaults.prismAlpha,
     liveBlur: Boolean = true,
     useLens: Boolean = true,
-    backdrop: Any? = null,
+    backdrop: Backdrop? = null,
     contentModifier: Modifier = Modifier
 ): Modifier {
-    val effectiveColor = if (liveBlur && containerColor == FrostGlassDefaults.containerColor) {
-        FrostGlassDefaults.liveBlurContainerColor
+    val activeBackdrop = backdrop ?: LocalBackdrop.current
+    val effectiveColor = if (liveBlur && activeBackdrop != null) {
+        if (containerColor == FrostGlassDefaults.containerColor) {
+            FrostGlassDefaults.liveBlurContainerColor
+        } else {
+            containerColor
+        }
     } else {
         containerColor
     }
-    return this
-        .clip(shape)
-        .background(color = effectiveColor)
-        .then(
-            if (sheenAlpha > 0f) {
-                Modifier.drawBehind {
+
+    return if (liveBlur && activeBackdrop != null) {
+        this.drawBackdrop(
+            backdrop = activeBackdrop,
+            shape = { shape },
+            effects = {
+                vibrancy()
+                blur(7f.dp.toPx())
+                // Lens refraction is API 33+ and strictly requires CornerBasedShape.
+                if (useLens && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && shape is CornerBasedShape) {
+                    try {
+                        lens(refractionHeight = 26f.dp.toPx(), refractionAmount = 26f.dp.toPx())
+                    } catch (_: Throwable) {
+                        // Fall back gracefully to vibrancy + blur without crashing
+                    }
+                }
+            },
+            onDrawSurface = {
+                if (effectiveColor != Color.Transparent && effectiveColor.alpha > 0f) {
+                    drawRect(effectiveColor)
+                }
+                if (sheenAlpha > 0f) {
                     drawRect(
                         brush = Brush.verticalGradient(
                             0f to Color.White.copy(alpha = sheenAlpha),
@@ -79,21 +108,50 @@ fun Modifier.glassEffect(
                         )
                     )
                 }
-            } else Modifier
+            }
         )
-        .then(contentModifier)
-        .border(
-            width = borderWidth,
-            brush = Brush.linearGradient(
-                colors = listOf(
-                    Color.White.copy(alpha = borderAlpha),
-                    Color.White.copy(alpha = borderAlpha * 0.6f),
-                    Color.Transparent,
-                    Color.White.copy(alpha = borderAlpha * 0.4f)
-                )
-            ),
-            shape = shape
-        )
+            .then(contentModifier)
+            .border(
+                width = borderWidth,
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = borderAlpha),
+                        Color.White.copy(alpha = borderAlpha * 0.6f),
+                        Color.Transparent,
+                        Color.White.copy(alpha = borderAlpha * 0.4f)
+                    )
+                ),
+                shape = shape
+            )
+    } else {
+        this.clip(shape)
+            .background(color = effectiveColor)
+            .then(
+                if (sheenAlpha > 0f) {
+                    Modifier.drawBehind {
+                        drawRect(
+                            brush = Brush.verticalGradient(
+                                0f to Color.White.copy(alpha = sheenAlpha),
+                                0.5f to Color.Transparent
+                            )
+                        )
+                    }
+                } else Modifier
+            )
+            .then(contentModifier)
+            .border(
+                width = borderWidth,
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = borderAlpha),
+                        Color.White.copy(alpha = borderAlpha * 0.6f),
+                        Color.Transparent,
+                        Color.White.copy(alpha = borderAlpha * 0.4f)
+                    )
+                ),
+                shape = shape
+            )
+    }
 }
 
 fun Modifier.softDropShadow(

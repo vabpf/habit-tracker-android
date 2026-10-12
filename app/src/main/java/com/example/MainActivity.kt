@@ -8,6 +8,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -20,8 +21,10 @@ import com.example.ui.screens.NotesScreen
 import com.example.ui.screens.RemindersScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.theme.HabitTrackerTheme
+import com.example.ui.util.LocalBackdrop
 import com.example.ui.viewmodel.AppScreen
 import com.example.ui.viewmodel.HabitViewModel
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,6 +37,12 @@ class MainActivity : ComponentActivity() {
             val selectedHabitId by viewModel.selectedHabitId.collectAsState()
 
             HabitTrackerTheme(themeMode = themeMode) {
+                // Shared backdrop sampled by floating glass chrome (e.g. the
+                // Dashboard view-mode switcher). Screens apply `layerBackdrop`
+                // to their scrollable content; glass samplers must sit OUTSIDE
+                // that node as later siblings.
+                val contentBackdrop = rememberLayerBackdrop()
+                CompositionLocalProvider(LocalBackdrop provides contentBackdrop) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     Crossfade(targetState = currentScreen, label = "screen_transition") { screen ->
                         when (screen) {
@@ -66,6 +75,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
+                }
                 }
             }
         }
