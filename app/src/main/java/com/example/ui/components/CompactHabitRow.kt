@@ -104,7 +104,7 @@ fun CompactHabitRow(
 
                 Box(
                     modifier = Modifier
-                        .size(width = 30.dp, height = 34.dp)
+                        .size(30.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .background(
                             if (isCompleted) habitColor

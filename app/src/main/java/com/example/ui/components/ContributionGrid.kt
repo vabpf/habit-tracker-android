@@ -3,6 +3,7 @@ package com.example.ui.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -83,131 +84,143 @@ fun ContributionGrid(
     val inactiveColor = TileInactiveDark
     val borderColor = TileBorderDark
 
-    Column(modifier = modifier) {
-        if (showLabels) {
-            // Month labels row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 28.dp, bottom = 6.dp)
-            ) {
-                monthMarkers.forEach { (_, monthName) ->
-                    Text(
-                        text = monthName,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-        }
+    // Square tiles: derive tile size from available width so cellWidth == cellHeight.
+    // tileHeight param is kept for backward compatibility but ignored for sizing.
+    val spacingDp: Dp = 3.dp
 
-        Row(modifier = Modifier.fillMaxWidth()) {
+    BoxWithConstraints(modifier = modifier) {
+        val labelWidth: Dp = if (showLabels) 34.dp else 0.dp
+        val availableWidth: Dp = maxWidth - labelWidth
+        val tileSize: Dp = ((availableWidth - spacingDp * (columns - 1)) / columns).coerceAtLeast(4.dp)
+        val gridHeight: Dp = tileSize * rows + spacingDp * (rows - 1)
+
+        Column(modifier = Modifier.fillMaxWidth()) {
             if (showLabels) {
-                // Day of week labels (Tue, Thu, Sat)
-                Column(
+                // Month labels row
+                Row(
                     modifier = Modifier
-                        .padding(end = 6.dp)
-                        .height(tileHeight * rows + (rows - 1).dp * 2.5f)
+                        .fillMaxWidth()
+                        .padding(start = 28.dp, bottom = 6.dp)
                 ) {
-                    val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-                    days.forEachIndexed { index, name ->
-                        if (index == 1 || index == 3 || index == 5) {
-                            Text(
-                                text = name,
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 9.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                ),
-                                modifier = Modifier.height(tileHeight + 2.5.dp)
-                            )
-                        } else {
-                            Box(modifier = Modifier.height(tileHeight + 2.5.dp))
-                        }
+                    monthMarkers.forEach { (_, monthName) ->
+                        Text(
+                            text = monthName,
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            modifier = Modifier.weight(1f)
+                        )
                     }
                 }
             }
 
-            Canvas(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(tileHeight * rows + (rows - 1).dp * 2.5f)
-                    .then(
-                        if (onDateClick != null) {
-                            Modifier.pointerInput(columns, rows) {
-                                detectTapGestures { tapOffset ->
-                                    val cellWidth = size.width / columns
-                                    val cellHeight = size.height / rows
-                                    val col = (tapOffset.x / cellWidth).toInt().coerceIn(0, columns - 1)
-                                    val row = (tapOffset.y / cellHeight).toInt().coerceIn(0, rows - 1)
-                                    val dayIndex = col * rows + row
-                                    val clickedDate = startDate.plusDays(dayIndex.toLong())
-                                    if (!clickedDate.isAfter(today)) {
-                                        onDateClick(clickedDate)
+            Row(modifier = Modifier.fillMaxWidth()) {
+                if (showLabels) {
+                    // Day of week labels (Tue, Thu, Sat)
+                    Column(
+                        modifier = Modifier
+                            .padding(end = 6.dp)
+                            .height(gridHeight)
+                    ) {
+                        val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+                        days.forEachIndexed { index, name ->
+                            if (index == 1 || index == 3 || index == 5) {
+                                Text(
+                                    text = name,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 9.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    ),
+                                    modifier = Modifier.height(tileSize + spacingDp)
+                                )
+                            } else {
+                                Box(modifier = Modifier.height(tileSize + spacingDp))
+                            }
+                        }
+                    }
+                }
+
+                Canvas(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(gridHeight)
+                        .then(
+                            if (onDateClick != null) {
+                                Modifier.pointerInput(columns, rows, startDate) {
+                                    detectTapGestures { tapOffset ->
+                                        val spacingPx = spacingDp.toPx()
+                                        val cellW = (size.width - (columns - 1) * spacingPx) / columns
+                                        val cellH = (size.height - (rows - 1) * spacingPx) / rows
+                                        val strideX = cellW + spacingPx
+                                        val strideY = cellH + spacingPx
+                                        val col = (tapOffset.x / strideX).toInt().coerceIn(0, columns - 1)
+                                        val row = (tapOffset.y / strideY).toInt().coerceIn(0, rows - 1)
+                                        val dayIndex = col * rows + row
+                                        val clickedDate = startDate.plusDays(dayIndex.toLong())
+                                        if (!clickedDate.isAfter(today)) {
+                                            onDateClick(clickedDate)
+                                        }
                                     }
                                 }
-                            }
-                        } else Modifier
-                    )
-            ) {
-                val totalWidth = size.width
-                val totalHeight = size.height
-                val spacing = 3.dp.toPx()
-
-                val cellWidth = (totalWidth - (columns - 1) * spacing) / columns
-                val cellHeight = (totalHeight - (rows - 1) * spacing) / rows
-                val cornerRadius = CornerRadius(cellWidth * 0.28f, cellHeight * 0.28f)
-
-                for (col in 0 until columns) {
-                    for (row in 0 until rows) {
-                        val dayIndex = col * rows + row
-                        val cellDate = startDate.plusDays(dayIndex.toLong())
-                        val isFuture = cellDate.isAfter(today)
-
-                        val x = col * (cellWidth + spacing)
-                        val y = row * (cellHeight + spacing)
-
-                        val dateStr = cellDate.format(formatter)
-                        val loggedValue = completedDatesMap[dateStr]
-
-                        val isFilled = if (isFuture) {
-                            false
-                        } else if (habit.habitType == HabitType.QUIT) {
-                            // Clean if no slip logged (loggedValue == null or 0)
-                            loggedValue == null || loggedValue <= 0f
-                        } else {
-                            loggedValue != null && loggedValue >= (habit.targetValue * 0.3f)
-                        }
-
-                        val fillRatio = if (isFuture || !isFilled) {
-                            0f
-                        } else if (habit.habitType == HabitType.QUIT) {
-                            1f
-                        } else {
-                            val v = loggedValue ?: 0f
-                            (v / habit.targetValue).coerceIn(0.4f, 1f)
-                        }
-
-                        // Draw background/inactive tile
-                        drawRoundRect(
-                            color = if (isFuture) inactiveColor.copy(alpha = 0.3f) else inactiveColor,
-                            topLeft = Offset(x, y),
-                            size = Size(cellWidth, cellHeight),
-                            cornerRadius = cornerRadius
+                            } else Modifier
                         )
+                ) {
+                    val spacing = spacingDp.toPx()
 
-                        // If filled, paint with habit color
-                        if (isFilled) {
-                            val tileColor = if (fillRatio >= 1f) habitColor else habitColor.copy(alpha = fillRatio)
+                    // Square cells: use tileSize so width == height
+                    val cellSide = tileSize.toPx()
+                    val cornerRadius = CornerRadius(cellSide * 0.28f, cellSide * 0.28f)
+
+                    for (col in 0 until columns) {
+                        for (row in 0 until rows) {
+                            val dayIndex = col * rows + row
+                            val cellDate = startDate.plusDays(dayIndex.toLong())
+                            val isFuture = cellDate.isAfter(today)
+
+                            val x = col * (cellSide + spacing)
+                            val y = row * (cellSide + spacing)
+
+                            val dateStr = cellDate.format(formatter)
+                            val loggedValue = completedDatesMap[dateStr]
+
+                            val isFilled = if (isFuture) {
+                                false
+                            } else if (habit.habitType == HabitType.QUIT) {
+                                // Clean if no slip logged (loggedValue == null or 0)
+                                loggedValue == null || loggedValue <= 0f
+                            } else {
+                                loggedValue != null && loggedValue >= (habit.targetValue * 0.3f)
+                            }
+
+                            val fillRatio = if (isFuture || !isFilled) {
+                                0f
+                            } else if (habit.habitType == HabitType.QUIT) {
+                                1f
+                            } else {
+                                val v = loggedValue ?: 0f
+                                (v / habit.targetValue).coerceIn(0.4f, 1f)
+                            }
+
+                            // Draw background/inactive tile
                             drawRoundRect(
-                                color = tileColor,
+                                color = if (isFuture) inactiveColor.copy(alpha = 0.3f) else inactiveColor,
                                 topLeft = Offset(x, y),
-                                size = Size(cellWidth, cellHeight),
+                                size = Size(cellSide, cellSide),
                                 cornerRadius = cornerRadius
                             )
+
+                            // If filled, paint with habit color
+                            if (isFilled) {
+                                val tileColor = if (fillRatio >= 1f) habitColor else habitColor.copy(alpha = fillRatio)
+                                drawRoundRect(
+                                    color = tileColor,
+                                    topLeft = Offset(x, y),
+                                    size = Size(cellSide, cellSide),
+                                    cornerRadius = cornerRadius
+                                )
+                            }
                         }
                     }
                 }
