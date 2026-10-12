@@ -24,6 +24,8 @@ jobs:
   build:
     name: Build Release APK
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Code
@@ -126,8 +128,10 @@ jobs:
             echo "should_release=true" >> $GITHUB_OUTPUT
             if [ -n "${{ inputs.release_tag }}" ]; then
               echo "tag_name=${{ inputs.release_tag }}" >> $GITHUB_OUTPUT
-            else
+            elif [ "$IS_TAG" = "true" ]; then
               echo "tag_name=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+            else
+              echo "tag_name=v1.0.${{ github.run_number }}" >> $GITHUB_OUTPUT
             fi
           else
             echo "should_release=false" >> $GITHUB_OUTPUT

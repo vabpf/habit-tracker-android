@@ -1,110 +1,95 @@
-# Habit ViewModel & DAO Integration Plan
+# Implementation Plan: Interactive Notifications, Gamification & Home Screen Widget
 
-Establish a robust, reactive ViewModel and Repository architecture for Habit Tracker that interacts with the Room SQLite database, encapsulates business logic, and exposes a single unified UI state to Jetpack Compose.
+Elevate the Habit Tracker with actionable Android system notifications, streak freeze protections, milestone achievement badges, and an interactive home screen widget.
 
 ---
 
 ### User Review & Critical Decisions
 
 > [!IMPORTANT]
-> The following architectural decisions were confirmed during the interactive planning session:
-> - **Data Access Architecture**: Repository pattern wrapping the Room `HabitDao` rather than direct DAO exposure to the ViewModel.
-> - **UI State Modeling**: Single immutable `HabitUiState` data class exposed via a `StateFlow` stream (`WhileSubscribed(5000)`).
-> - **Extended Operations**: In addition to standard CRUD (Create, Read, Update, Delete), the ViewModel will support habit reordering, category filtering, and archive/restore functionality.
+> The following directions were confirmed during the interactive planning session:
+> - **Primary Focus**: Interactive system notifications and an interactive home screen widget for fast habit logging.
+> - **Reminder Delivery**: System notifications powered by Android `NotificationManager` and `AlarmManager` with direct "Complete" quick-action buttons right from the notification drawer/lock screen.
+> - **Motivation Mechanics**:
+>   1. **Streak Freeze Protection**: Bankable freeze tokens that safeguard active streaks from breaking when a day is accidentally skipped or during rest days.
+>   2. **Milestone Achievement Badges**: Unlockable achievement badges with celebration dialogues/cards for hitting 3, 7, 14, 30, and 100-day streaks.
 
 ---
 
-## 1. Overview & Core Concept
+## 1. Feature Specifications
 
-- **What It Does**: Centralizes habit state management and Room database operations in a dedicated `HabitViewModel` and `HabitRepository`. The UI observes an immutable state representation that updates in real time whenever SQLite tables change.
-- **Target Experience**: Seamless, glitch-free UI updates with instant response times, offline-first reliability, and clean separation between Android framework lifecycles and business logic.
-- **Key Value**: Provides predictable state flow, eliminating out-of-sync states between filtered views, detail screens, and database writes.
+### A. Real System Notifications with Quick-Complete Actions
+- **AlarmManager & NotificationChannel**:
+  - Register a dedicated Notification Channel (`habit_reminders_channel`) with high importance.
+  - Set exact/inexact daily alarms using `AlarmManager` for scheduled habit reminder times.
+  - Implement `HabitNotificationReceiver: BroadcastReceiver` that triggers when the alarm fires, building an expandable notification displaying habit title, category icon, current streak count, and motivation quote.
+- **Quick-Complete Notification Action**:
+  - Add an action button labeled **"✓ Complete"** to each notification.
+  - Add a dedicated `HabitQuickActionReceiver: BroadcastReceiver` that logs completion into the Room SQLite database directly in background without opening the app, updates streak calculations, and dismisses/updates the notification with a positive confirmation toast/message.
+- **Boot Persistence**:
+  - Add `BootReceiver: BroadcastReceiver` listening to `BOOT_COMPLETED` so scheduled alarms are automatically reinstated when the device restarts.
+
+### B. Streak Freeze Protection Mechanism
+- **Data Model**:
+  - Add `streakFreezesAvailable: Int` and `frozenDates: List<String>` tracking to user statistics / habit model.
+  - Users earn freeze tokens (capped at 2 max) for sustained consistency (e.g., maintaining 7 active days awards 1 freeze token).
+- **Streak Evaluation Logic**:
+  - If a user misses completing a habit on a given date, the freeze token automatically intervenes (or user can manually activate freeze mode), preventing the streak from resetting to 0.
+  - UI visual indicator: Icy blue frost badge on streak counters, indicating "Streak Frozen - Protected!" instead of showing broken streak.
+  - Streak Freeze bank counter in the dashboard top app bar or streak card.
+
+### C. Milestone Achievement Badges
+- **Badge Types & Tiers**:
+  - **First Step**: First habit ever completed.
+  - **Consistency Trio**: 3-day streak across any habit.
+  - **Weekly Warrior**: 7-day unbroken streak.
+  - **Fortnight Focus**: 14-day unbroken streak.
+  - **Monthly Habit Master**: 30-day streak milestone.
+  - **Centurion**: 100-day milestone.
+  - **Streak Savior**: Successfully applied a streak freeze to rescue a streak.
+- **Badges Screen & Celebration**:
+  - Visual badges grid in Analytics or dedicated "Achievements" tab with locked/unlocked visual states, unlock dates, and progress percentages.
+  - Animated celebration dialog with confetti / celebratory banner upon unlocking a new badge during app usage.
+
+### D. Home Screen Widget (Android AppWidget / Glance)
+- **Compact & Interactive Habit Widget**:
+  - Displays today's top pending habits with checkmark circles.
+  - Tapping the habit checkmark immediately records completion and updates the widget state.
+  - Tapping habit title launches `MainActivity` directly to that habit's detail page.
+  - Displays today's overall progress bar (e.g., "3 of 5 completed - 60%").
 
 ---
 
-## 2. User Experience & Visual Design
+## 2. Technical Architecture & File Plan
 
-- **Unified State Collection**: The UI collects `uiState` with lifecycle safety (`collectAsStateWithLifecycle()`), ensuring operations pause when the app is in the background.
-- **Instant Optimistic Feedback**: When checking off habits, reordering items, or changing categories, updates appear immediately in Compose while saving asynchronously in SQLite.
-- **Category & Archive Filtering**:
-  - Filter chips ("All", "Fitness", "Health", "Mind", "Hobbies", "Archived") update the visible list without reloading or querying the database from scratch.
-  - Archived habits can be toggled in and out of the active dashboard to keep routine views clean.
-- **Error Handling & Loading States**:
-  - Subtle feedback toasts / snackbar messages for errors (e.g., validation failures on empty habit names).
+### 1. Data Layer Enhancements
+- `app/src/main/java/com/example/data/model/Badge.kt`: Data class defining badges, icons, requirements, unlock status, and earned timestamps.
+- `app/src/main/java/com/example/data/model/StreakFreeze.kt`: Model and logic for tracking freeze inventory and freeze usage history.
+- `app/src/main/java/com/example/data/local/HabitDao.kt`: Add quick-complete helper queries and badge unlock persistence.
 
----
+### 2. Notification & Receiver Infrastructure
+- `app/src/main/java/com/example/receiver/HabitAlarmReceiver.kt`: Fires notifications at configured reminder times.
+- `app/src/main/java/com/example/receiver/HabitActionReceiver.kt`: Handles "Complete" action button clicks directly from notification tray via coroutine scope and `HabitRepository`.
+- `app/src/main/java/com/example/receiver/BootCompletedReceiver.kt`: Reschedules alarms on device boot.
+- `app/src/main/java/com/example/util/NotificationHelper.kt`: Utility for creating channels, posting notifications, and formatting PendingIntents.
 
-## 3. Key Product Decisions & Trade-Offs
+### 3. Widget Implementation
+- `app/src/main/java/com/example/widget/HabitWidgetProvider.kt`: AppWidgetProvider managing widget views, remote clicks, and auto-updating upon database changes.
+- `app/src/main/res/layout/widget_habit_tracker.xml` and `res/xml/habit_widget_info.xml`: AppWidget layout and provider configuration metadata.
 
-- **Decision 1: Repository Layer Abstraction**
-  - *Chosen Approach*: `HabitRepository` acts as the single source of truth between `HabitDao` and `HabitViewModel`.
-  - *Why*: Encapsulates query logic, transactions, and seeding routines, preventing the ViewModel from depending directly on Room internal mechanisms.
-  - *Alternatives Considered*: Direct DAO access in ViewModel (rejected: tight coupling, harder to mock or test).
-
-- **Decision 2: Single Unified UI State Data Class vs. Multiple StateFlows**
-  - *Chosen Approach*: `data class HabitUiState(...)` exposed through `val uiState: StateFlow<HabitUiState>`.
-  - *Why*: Guarantees atomic, cohesive state changes. Eliminates race conditions where filtered habits and selected categories update across separate frames.
-  - *Alternatives Considered*: Multiple independent `MutableStateFlow` streams (already partially used, now unified into one cohesive model).
-
-- **Decision 3: Archive Flag Support**
-  - *Chosen Approach*: Add `isArchived` toggle methods (`archiveHabit(id)`, `unarchiveHabit(id)`) and filter active habits by default.
-  - *Why*: Users often want to pause or retire habits without losing their historic contribution tile grids, streaks, and journal notes.
+### 4. UI & ViewModel Updates
+- `app/src/main/java/com/example/ui/viewmodel/HabitViewModel.kt`:
+  - Expose badges list, streak freeze balance, and badge unlock event channel.
+  - Integrate freeze consumption inside streak calculation routine.
+- `app/src/main/java/com/example/ui/screens/BadgesScreen.kt`: Dedicated achievements showcase with card grid, tier badges, and progress bars.
+- `app/src/main/java/com/example/ui/components/StreakFreezeBanner.kt`: Visual freeze bank badge and rescue indicators on habit cards.
+- `app/src/main/java/com/example/ui/components/MilestoneCelebrationDialog.kt`: Confetti celebration modal when a new badge is attained.
 
 ---
 
-## 4. Technical Architecture & Data Strategy
-
-```
-┌────────────────────────────────────────────────────────┐
-│                   Jetpack Compose UI                   │
-│   (DashboardScreen, DetailScreen, EditHabitScreen)     │
-└───────────────────────────▲────────────────────────────┘
-                            │ collectAsStateWithLifecycle()
-                            │ emits HabitUiState
-┌───────────────────────────┴────────────────────────────┐
-│                    HabitViewModel                      │
-│  - uiState: StateFlow<HabitUiState>                    │
-│  - createHabit(habit), updateHabit(habit)              │
-│  - deleteHabit(habit), archiveHabit(id)                │
-│  - reorderHabits(fromIndex, toIndex)                   │
-│  - setCategory(category), filterActive()               │
-└───────────────────────────▲────────────────────────────┘
-                            │ Coroutine Dispatchers / Flow
-┌───────────────────────────┴────────────────────────────┐
-│                   HabitRepository                      │
-│  - allHabits: Flow<List<Habit>>                        │
-│  - insert/update/delete/reorder/archive operations     │
-└───────────────────────────▲────────────────────────────┘
-                            │ Room DAO Queries
-┌───────────────────────────┴────────────────────────────┐
-│              HabitDao (SQLite Database)                │
-│  @Query, @Insert, @Update, @Delete                     │
-└────────────────────────────────────────────────────────┘
-```
-
-### Unified UI State Definition
-
-```kotlin
-data class HabitUiState(
-    val habits: List<Habit> = emptyList(),
-    val filteredHabits: List<Habit> = emptyList(),
-    val selectedCategory: String = "All",
-    val availableCategories: List<String> = listOf("All", "Fitness", "Health", "Mind", "Hobbies"),
-    val showArchived: Boolean = false,
-    val selectedHabit: Habit? = null,
-    val isLoading: Boolean = false,
-    val userMessage: String? = null
-)
-```
-
-### Interactive Methods on `HabitViewModel`
-
-1. **Create & Update**:
-   - `fun saveHabit(name: String, description: String, icon: String, color: Long, type: HabitType, tracking: TrackingType, target: Float, unit: String, frequency: Int, category: String, habitId: Long? = null)`
-2. **Read & Filter**:
-   - Combined reactive stream merging `repository.allHabits`, `selectedCategory`, and `showArchived` into `uiState`.
-3. **Delete & Archive**:
-   - `fun deleteHabit(habit: Habit)`
-   - `fun toggleArchiveHabit(habit: Habit)`
-4. **Reorder**:
-   - `fun moveHabit(fromIndex: Int, toIndex: Int)` updating `displayOrder` in SQLite.
+## 3. Verification & Testing Plan
+- **Notification Verification**: Test trigger of system notification, verify notification permissions (`POST_NOTIFICATIONS`), and verify clicking "Complete" logs completion and updates Room database.
+- **Streak Freeze Verification**: Unit/Robolectric test verifying that a missed day consumes a freeze token if available and preserves `currentStreak`.
+- **Milestone Badges Verification**: Verify badge unlock conditions trigger accurately when streak thresholds (3, 7, 14, 30, 100) are met.
+- **Widget Verification**: Test widget receiver updates when habits are checked or added.
+- **Compilation Check**: Run `compile_applet` to verify clean compilation with all receivers and manifest declarations.
