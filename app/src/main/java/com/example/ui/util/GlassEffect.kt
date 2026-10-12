@@ -21,12 +21,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.CornerBasedShape
 import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.backdrops.LayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 
-val LocalBackdrop = compositionLocalOf<Backdrop?> { null }
+val LocalBackdrop = compositionLocalOf<LayerBackdrop?> { null }
 
 /**
  * Frost glass tokens, ported from SpendSense `FrostGlassDefaults`
