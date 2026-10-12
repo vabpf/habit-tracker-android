@@ -68,6 +68,8 @@ import com.example.ui.components.CompactHabitRow
 import com.example.ui.components.HabitActionButton
 import com.example.ui.components.HabitCard
 import com.example.ui.components.HabitIconCatalog
+import com.example.ui.util.glassEffect
+import com.example.ui.util.softDropShadow
 import com.example.ui.theme.BrandPrimary
 import com.example.ui.viewmodel.AppScreen
 import com.example.ui.viewmodel.DashboardViewMode
@@ -557,14 +559,27 @@ fun DashboardScreen(
         }
 
         // Floating Pill View Mode Switcher at bottom center (Screenshot 1 & 2)
+        // Glass finish per SpendSense recipe: static frost (tint + sheen +
+        // gradient border) + soft drop shadow. Single hero element, so no
+        // list-virtualization concern. Live Backdrop blur intentionally
+        // deferred until compileSdk 37 + AGP 9.2 upgrade.
+        val navBarShape = RoundedCornerShape(26.dp)
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
                 .padding(bottom = 16.dp)
-                .clip(RoundedCornerShape(26.dp))
-                .background(Color(0xE622252E))
-                .border(1.dp, Color(0xFF333742), RoundedCornerShape(26.dp))
+                .softDropShadow(
+                    shape = navBarShape,
+                    color = Color.Black.copy(alpha = 0.35f),
+                    blur = 16.dp,
+                    offsetY = 4.dp
+                )
+                .glassEffect(
+                    shape = navBarShape,
+                    liveBlur = true,
+                    useLens = true
+                )
                 .padding(horizontal = 6.dp, vertical = 6.dp)
                 .testTag("view_mode_switcher")
         ) {
