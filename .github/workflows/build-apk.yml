@@ -9,6 +9,11 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
     inputs:
+      run_unit_tests:
+        description: 'Run unit tests before building'
+        required: false
+        type: boolean
+        default: true
       create_github_release:
         description: 'Create a GitHub Release with the Release APK attached'
         required: false
@@ -64,6 +69,7 @@ jobs:
           fi
 
       - name: Setup Consistent Signing Keystore
+        if: ${{ !(github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')) }}
         env:
           CUSTOM_KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           CUSTOM_STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
@@ -100,12 +106,16 @@ jobs:
           fi
 
       - name: Run Unit Tests
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.run_unit_tests }}
         run: ./gradlew testDebugUnitTest --continue
 
       - name: Build Release APK
+        # Plain branch pushes run unit tests only; build runs on tags, PRs, and manual dispatches.
+        if: ${{ !(github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')) }}
         run: ./gradlew assembleRelease --stacktrace
 
       - name: Stage Release APK
+        if: ${{ !(github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')) }}
         run: |
           mkdir -p output_apks
           if [ -f "app/build/outputs/apk/release/app-release.apk" ]; then
@@ -113,6 +123,7 @@ jobs:
           fi
 
       - name: Upload Release APK Artifact
+        if: ${{ !(github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')) }}
         uses: actions/upload-artifact@v4
         with:
           name: HabitTracker-Release-APK
