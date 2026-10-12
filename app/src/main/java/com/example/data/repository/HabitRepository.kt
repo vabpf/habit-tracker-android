@@ -15,20 +15,91 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.random.Random
 
+import com.example.data.local.BadgeDao
+import com.example.data.local.StreakFreezeDao
+import com.example.data.model.StreakFreezeState
+import com.example.data.model.UnlockedBadge
+
 class HabitRepository(
     private val habitDao: HabitDao,
     private val habitLogDao: HabitLogDao,
     private val habitNoteDao: HabitNoteDao,
-    private val habitReminderDao: HabitReminderDao
+    private val habitReminderDao: HabitReminderDao,
+    private val streakFreezeDao: StreakFreezeDao,
+    private val badgeDao: BadgeDao
 ) {
     val allHabits: Flow<List<Habit>> = habitDao.getAllHabits()
     val allHabitsIncludingArchived: Flow<List<Habit>> = habitDao.getAllHabitsIncludingArchived()
     val allLogs: Flow<List<HabitLog>> = habitLogDao.getAllLogs()
+    val streakFreezeState: Flow<StreakFreezeState?> = streakFreezeDao.getStreakFreezeStateFlow()
+    val unlockedBadges: Flow<List<UnlockedBadge>> = badgeDao.getAllUnlockedBadgesFlow()
 
     fun getHabit(id: Long): Flow<Habit?> = habitDao.getHabitById(id)
+    suspend fun getHabitByIdOnce(id: Long): Habit? = habitDao.getHabitByIdOnce(id)
+    suspend fun getAllHabitsOnce(): List<Habit> = habitDao.getAllHabitsOnce()
+    suspend fun getActiveHabitsOnce(): List<Habit> = habitDao.getActiveHabitsOnce()
     fun getLogsForHabit(habitId: Long): Flow<List<HabitLog>> = habitLogDao.getLogsForHabit(habitId)
     fun getNotesForHabit(habitId: Long): Flow<List<HabitNote>> = habitNoteDao.getNotesForHabit(habitId)
     fun getRemindersForHabit(habitId: Long): Flow<List<HabitReminder>> = habitReminderDao.getRemindersForHabit(habitId)
+
+    suspend fun getStreakFreezeStateOnce(): StreakFreezeState {
+        val existing = streakFreezeDao.getStreakFreezeStateOnce()
+        if (existing != null) return existing
+        val defaultState = StreakFreezeState(id = 1, availableTokens = 2, maxTokens = 3, autoFreezeEnabled = true)
+        streakFreezeDao.insertOrUpdateStreakFreeze(defaultState)
+        return defaultState
+    }
+
+    suspend fun updateStreakFreeze(state: StreakFreezeState) {
+        streakFreezeDao.insertOrUpdateStreakFreeze(state)
+    }
+
+    suspend fun useStreakFreeze(date: String): Boolean {
+        val current = getStreakFreezeStateOnce()
+        if (current.availableTokens <= 0) return false
+        val existingDates = current.getFrozenDatesList().toMutableList()
+        if (!existingDates.contains(date)) {
+            existingDates.add(date)
+        }
+        val updated = current.copy(
+            availableTokens = (current.availableTokens - 1).coerceAtLeast(0),
+            frozenDates = existingDates.joinToString(","),
+            totalFreezesUsed = current.totalFreezesUsed + 1
+        )
+        streakFreezeDao.insertOrUpdateStreakFreeze(updated)
+        unlockBadge("freeze_shield")
+        return true
+    }
+
+    suspend fun awardStreakFreezeToken(): Boolean {
+        val current = getStreakFreezeStateOnce()
+        if (current.availableTokens >= current.maxTokens) return false
+        val updated = current.copy(availableTokens = current.availableTokens + 1)
+        streakFreezeDao.insertOrUpdateStreakFreeze(updated)
+        return true
+    }
+
+    suspend fun setAutoFreeze(enabled: Boolean) {
+        val current = getStreakFreezeStateOnce()
+        streakFreezeDao.insertOrUpdateStreakFreeze(current.copy(autoFreezeEnabled = enabled))
+    }
+
+    suspend fun unlockBadge(badgeId: String): Boolean {
+        val existing = badgeDao.getUnlockedBadge(badgeId)
+        if (existing != null) return false
+        badgeDao.unlockBadge(UnlockedBadge(badgeId = badgeId, unlockedAt = System.currentTimeMillis()))
+        return true
+    }
+
+    suspend fun isHabitCompletedOnDate(habitId: Long, date: String): Boolean {
+        val log = habitLogDao.getLog(habitId, date)
+        val habit = habitDao.getHabitByIdOnce(habitId) ?: return false
+        return if (habit.habitType == HabitType.QUIT) {
+            log == null || log.value <= 0f
+        } else {
+            log?.isCompleted == true
+        }
+    }
 
     suspend fun saveHabit(habit: Habit): Long {
         return if (habit.id == 0L) {
@@ -138,6 +209,10 @@ class HabitRepository(
         habitLogDao.deleteAllLogs()
         habitNoteDao.deleteAllNotes()
         habitReminderDao.deleteAllReminders()
+        badgeDao.deleteAllUnlockedBadges()
+        streakFreezeDao.insertOrUpdateStreakFreeze(
+            StreakFreezeState(id = 1, availableTokens = 2, maxTokens = 3, autoFreezeEnabled = true)
+        )
     }
 
     suspend fun reloadSampleData() {
@@ -426,5 +501,23 @@ class HabitRepository(
             )
         )
         habitReminderDao.insertReminders(reminders)
+
+        // Seed initial streak freeze state and initial badges
+        streakFreezeDao.insertOrUpdateStreakFreeze(
+            StreakFreezeState(
+                id = 1,
+                availableTokens = 2,
+                maxTokens = 3,
+                autoFreezeEnabled = true,
+                frozenDates = today.minusDays(18).format(formatter),
+                totalFreezesUsed = 1
+            )
+        )
+
+        badgeDao.unlockBadge(UnlockedBadge("first_step", System.currentTimeMillis() - 86400000L * 30))
+        badgeDao.unlockBadge(UnlockedBadge("streak_3", System.currentTimeMillis() - 86400000L * 25))
+        badgeDao.unlockBadge(UnlockedBadge("streak_7", System.currentTimeMillis() - 86400000L * 20))
+        badgeDao.unlockBadge(UnlockedBadge("streak_14", System.currentTimeMillis() - 86400000L * 10))
+        badgeDao.unlockBadge(UnlockedBadge("variety_pack", System.currentTimeMillis() - 86400000L * 5))
     }
 }

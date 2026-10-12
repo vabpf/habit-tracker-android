@@ -10,6 +10,8 @@ import com.example.data.model.Habit
 import com.example.data.model.HabitLog
 import com.example.data.model.HabitNote
 import com.example.data.model.HabitReminder
+import com.example.data.model.StreakFreezeState
+import com.example.data.model.UnlockedBadge
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -25,6 +27,12 @@ interface HabitDao {
 
     @Query("SELECT * FROM habits WHERE id = :id")
     suspend fun getHabitByIdOnce(id: Long): Habit?
+
+    @Query("SELECT * FROM habits WHERE isArchived = 0 ORDER BY displayOrder ASC, id ASC")
+    suspend fun getActiveHabitsOnce(): List<Habit>
+
+    @Query("SELECT * FROM habits ORDER BY displayOrder ASC, id ASC")
+    suspend fun getAllHabitsOnce(): List<Habit>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHabit(habit: Habit): Long
@@ -134,3 +142,34 @@ interface HabitReminderDao {
     @Query("DELETE FROM habit_reminders")
     suspend fun deleteAllReminders()
 }
+
+@Dao
+interface StreakFreezeDao {
+    @Query("SELECT * FROM streak_freezes WHERE id = 1 LIMIT 1")
+    fun getStreakFreezeStateFlow(): Flow<StreakFreezeState?>
+
+    @Query("SELECT * FROM streak_freezes WHERE id = 1 LIMIT 1")
+    suspend fun getStreakFreezeStateOnce(): StreakFreezeState?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertOrUpdateStreakFreeze(state: StreakFreezeState): Long
+}
+
+@Dao
+interface BadgeDao {
+    @Query("SELECT * FROM unlocked_badges")
+    fun getAllUnlockedBadgesFlow(): Flow<List<UnlockedBadge>>
+
+    @Query("SELECT * FROM unlocked_badges")
+    suspend fun getAllUnlockedBadgesOnce(): List<UnlockedBadge>
+
+    @Query("SELECT * FROM unlocked_badges WHERE badgeId = :badgeId LIMIT 1")
+    suspend fun getUnlockedBadge(badgeId: String): UnlockedBadge?
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun unlockBadge(badge: UnlockedBadge): Long
+
+    @Query("DELETE FROM unlocked_badges")
+    suspend fun deleteAllUnlockedBadges()
+}
+

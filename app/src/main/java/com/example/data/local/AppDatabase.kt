@@ -13,6 +13,9 @@ import com.example.data.model.HabitReminder
 import com.example.data.model.HabitType
 import com.example.data.model.TrackingType
 
+import com.example.data.model.StreakFreezeState
+import com.example.data.model.UnlockedBadge
+
 class Converters {
     @TypeConverter
     fun fromHabitType(value: HabitType): String = value.name
@@ -40,9 +43,11 @@ class Converters {
         Habit::class,
         HabitLog::class,
         HabitNote::class,
-        HabitReminder::class
+        HabitReminder::class,
+        StreakFreezeState::class,
+        UnlockedBadge::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -51,6 +56,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun habitLogDao(): HabitLogDao
     abstract fun habitNoteDao(): HabitNoteDao
     abstract fun habitReminderDao(): HabitReminderDao
+    abstract fun streakFreezeDao(): StreakFreezeDao
+    abstract fun badgeDao(): BadgeDao
 
     companion object {
         @Volatile
