@@ -29,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Settings
@@ -47,6 +48,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,6 +61,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.Habit
 import com.example.data.model.HabitLog
+import com.example.ui.components.MilestoneCelebrationDialog
+import com.example.ui.components.StreakFreezeBanner
+import com.example.ui.components.StreakFreezeVaultDialog
 import com.example.ui.components.CompactHabitRow
 import com.example.ui.components.HabitActionButton
 import com.example.ui.components.HabitCard
@@ -80,6 +86,10 @@ fun DashboardScreen(
     val allLogs by viewModel.allLogs.collectAsState()
     val viewMode by viewModel.viewMode.collectAsState()
     val selectedCategory by viewModel.selectedCategory.collectAsState()
+    val streakFreezeState by viewModel.streakFreezeState.collectAsState()
+    val newlyUnlockedBadge by viewModel.newlyUnlockedBadge.collectAsState()
+
+    var showVaultDialog by remember { mutableStateOf(false) }
 
     val today = remember { LocalDate.now() }
     val formatter = remember { DateTimeFormatter.ISO_LOCAL_DATE }
@@ -133,11 +143,28 @@ fun DashboardScreen(
                     )
                 }
 
-                // Right actions: Analytics + Add Habit
+                // Right actions: Achievements + Analytics + Add Habit
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Achievements Trophy Button
+                    IconButton(
+                        onClick = { viewModel.navigateTo(AppScreen.BADGES) },
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF1E212A))
+                            .testTag("achievements_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.EmojiEvents,
+                            contentDescription = "Achievements",
+                            tint = Color(0xFFFFD54F),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
                     // Analytics Button
                     IconButton(
                         onClick = { viewModel.navigateTo(AppScreen.ANALYTICS) },
@@ -172,6 +199,14 @@ fun DashboardScreen(
                         )
                     }
                 }
+            }
+
+            // Streak Freeze Protection Banner
+            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+                StreakFreezeBanner(
+                    freezeState = streakFreezeState,
+                    onOpenVault = { showVaultDialog = true }
+                )
             }
 
             // Categories Filter Chips
@@ -594,6 +629,27 @@ fun DashboardScreen(
                     )
                 }
             }
+        }
+
+        // Vault Dialog
+        if (showVaultDialog) {
+            StreakFreezeVaultDialog(
+                freezeState = streakFreezeState,
+                onToggleAutoFreeze = { viewModel.toggleAutoFreeze(it) },
+                onUseFreezeToday = {
+                    viewModel.useStreakFreezeToday()
+                    showVaultDialog = false
+                },
+                onDismiss = { showVaultDialog = false }
+            )
+        }
+
+        // Milestone Celebration Modal
+        if (newlyUnlockedBadge != null) {
+            MilestoneCelebrationDialog(
+                badge = newlyUnlockedBadge,
+                onDismiss = { viewModel.dismissMilestoneCelebration() }
+            )
         }
     }
 }

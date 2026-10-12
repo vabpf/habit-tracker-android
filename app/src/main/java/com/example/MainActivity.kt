@@ -61,6 +61,9 @@ class MainActivity : ComponentActivity() {
                             AppScreen.SETTINGS -> {
                                 SettingsScreen(viewModel = viewModel)
                             }
+                            AppScreen.BADGES -> {
+                                com.example.ui.screens.BadgesScreen(viewModel = viewModel)
+                            }
                         }
                     }
                 }

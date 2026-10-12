@@ -82,7 +82,7 @@ class HabitActionReceiver : BroadcastReceiver() {
                     )
 
                     // Refresh any installed Home Screen widgets
-                    HabitWidgetProvider.sendUpdateBroadcast(context)
+                    HabitWidgetProvider.updateAllWidgets(context)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

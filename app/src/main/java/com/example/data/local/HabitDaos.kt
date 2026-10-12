@@ -70,6 +70,9 @@ interface HabitLogDao {
     @Query("SELECT * FROM habit_logs")
     fun getAllLogs(): Flow<List<HabitLog>>
 
+    @Query("SELECT * FROM habit_logs")
+    suspend fun getAllLogsOnce(): List<HabitLog>
+
     @Query("SELECT * FROM habit_logs WHERE habitId = :habitId AND date = :date LIMIT 1")
     suspend fun getLog(habitId: Long, date: String): HabitLog?
 

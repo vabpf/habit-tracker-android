@@ -22,6 +22,10 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
+import com.example.data.model.Badge
+import com.example.data.model.StreakFreezeState
+import com.example.receiver.NotificationHelper
+import com.example.widget.HabitWidgetProvider
 import java.util.Locale
 
 enum class AppScreen {
@@ -31,7 +35,8 @@ enum class AppScreen {
     NOTES,
     REMINDERS,
     EDIT_HABIT,
-    SETTINGS
+    SETTINGS,
+    BADGES
 }
 
 enum class DashboardViewMode {
@@ -78,11 +83,14 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
             habitDao = db.habitDao(),
             habitLogDao = db.habitLogDao(),
             habitNoteDao = db.habitNoteDao(),
-            habitReminderDao = db.habitReminderDao()
+            habitReminderDao = db.habitReminderDao(),
+            streakFreezeDao = db.streakFreezeDao(),
+            badgeDao = db.badgeDao()
         )
 
         viewModelScope.launch {
             repository.seedInitialDataIfEmpty()
+            NotificationHelper.createNotificationChannel(application)
         }
     }
 
@@ -123,6 +131,109 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
 
     val allLogs: StateFlow<List<HabitLog>> = repository.allLogs
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val streakFreezeState: StateFlow<StreakFreezeState?> = repository.streakFreezeState
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), StreakFreezeState())
+
+    private val _newlyUnlockedBadge = MutableStateFlow<Badge?>(null)
+    val newlyUnlockedBadge: StateFlow<Badge?> = _newlyUnlockedBadge.asStateFlow()
+
+    // Dynamic Badges calculation
+    val badges: StateFlow<List<Badge>> = combine(
+        allHabits,
+        allLogs,
+        repository.unlockedBadges,
+        streakFreezeState
+    ) { habits, logs, unlocked, freeze ->
+        val unlockedIds = unlocked.map { it.badgeId }.toSet()
+        val totalCompletions = logs.count { it.isCompleted }
+        val maxStreak = habits.maxOfOrNull { calculateCurrentStreak(it, logs) } ?: 0
+        val habitCount = habits.size
+        val freezesUsed = freeze?.totalFreezesUsed ?: 0
+
+        listOf(
+            Badge(
+                id = "first_step",
+                title = "First Step",
+                description = "Complete your very first habit",
+                iconName = "star",
+                category = "Volume",
+                target = 1,
+                current = totalCompletions.coerceAtMost(1),
+                isUnlocked = unlockedIds.contains("first_step") || totalCompletions >= 1
+            ),
+            Badge(
+                id = "streak_3",
+                title = "3-Day Spark",
+                description = "Build momentum with a 3-day streak",
+                iconName = "fire",
+                category = "Streak",
+                target = 3,
+                current = maxStreak.coerceAtMost(3),
+                isUnlocked = unlockedIds.contains("streak_3") || maxStreak >= 3
+            ),
+            Badge(
+                id = "streak_7",
+                title = "Weekly Warrior",
+                description = "Reach an unbroken 7-day streak",
+                iconName = "fire",
+                category = "Streak",
+                target = 7,
+                current = maxStreak.coerceAtMost(7),
+                isUnlocked = unlockedIds.contains("streak_7") || maxStreak >= 7
+            ),
+            Badge(
+                id = "streak_14",
+                title = "Fortnight Focus",
+                description = "Keep the flame burning for 14 straight days",
+                iconName = "fire",
+                category = "Streak",
+                target = 14,
+                current = maxStreak.coerceAtMost(14),
+                isUnlocked = unlockedIds.contains("streak_14") || maxStreak >= 14
+            ),
+            Badge(
+                id = "streak_30",
+                title = "Monthly Master",
+                description = "Achieve mastery with a 30-day streak",
+                iconName = "star",
+                category = "Streak",
+                target = 30,
+                current = maxStreak.coerceAtMost(30),
+                isUnlocked = unlockedIds.contains("streak_30") || maxStreak >= 30
+            ),
+            Badge(
+                id = "freeze_shield",
+                title = "Streak Savior",
+                description = "Safeguard a streak using a freeze shield",
+                iconName = "shield",
+                category = "Protection",
+                target = 1,
+                current = freezesUsed.coerceAtMost(1),
+                isUnlocked = unlockedIds.contains("freeze_shield") || freezesUsed >= 1
+            ),
+            Badge(
+                id = "habit_collector",
+                title = "Habit Collector",
+                description = "Track 5 or more active habits concurrently",
+                iconName = "star",
+                category = "Consistency",
+                target = 5,
+                current = habitCount.coerceAtMost(5),
+                isUnlocked = unlockedIds.contains("habit_collector") || habitCount >= 5
+            ),
+            Badge(
+                id = "century_club",
+                title = "Century Club",
+                description = "Log 100 habit check-ins all time",
+                iconName = "star",
+                category = "Volume",
+                target = 100,
+                current = totalCompletions.coerceAtMost(100),
+                isUnlocked = unlockedIds.contains("century_club") || totalCompletions >= 100
+            )
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Filtered Habits based on Category and Archive status
     val filteredHabits: StateFlow<List<Habit>> = combine(
@@ -299,6 +410,8 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
         val dateStr = date.format(DateTimeFormatter.ISO_LOCAL_DATE)
         viewModelScope.launch {
             repository.toggleHabitDay(habit, dateStr)
+            checkAndAwardMilestoneBadges()
+            HabitWidgetProvider.updateAllWidgets(getApplication())
         }
     }
 
@@ -306,6 +419,8 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
         val dateStr = date.format(DateTimeFormatter.ISO_LOCAL_DATE)
         viewModelScope.launch {
             repository.incrementHabitDay(habit, dateStr, step)
+            checkAndAwardMilestoneBadges()
+            HabitWidgetProvider.updateAllWidgets(getApplication())
         }
     }
 
@@ -313,6 +428,79 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
         val dateStr = date.format(DateTimeFormatter.ISO_LOCAL_DATE)
         viewModelScope.launch {
             repository.setHabitDayValue(habit, dateStr, value)
+            checkAndAwardMilestoneBadges()
+            HabitWidgetProvider.updateAllWidgets(getApplication())
+        }
+    }
+
+    // STREAK FREEZE ACTIONS
+    fun useStreakFreezeToday() {
+        val todayStr = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+        viewModelScope.launch {
+            val success = repository.useStreakFreeze(todayStr)
+            if (success) {
+                _userMessage.value = "Streak shield applied for today! ❄️"
+                val shieldBadge = badges.value.firstOrNull { it.id == "freeze_shield" }
+                if (shieldBadge != null) {
+                    _newlyUnlockedBadge.value = shieldBadge
+                }
+            } else {
+                _userMessage.value = "No freeze tokens available."
+            }
+        }
+    }
+
+    fun toggleAutoFreeze(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.setAutoFreeze(enabled)
+            _userMessage.value = if (enabled) "Auto-rescue shield enabled" else "Auto-rescue shield disabled"
+        }
+    }
+
+    fun dismissMilestoneCelebration() {
+        _newlyUnlockedBadge.value = null
+    }
+
+    private suspend fun checkAndAwardMilestoneBadges() {
+        val currentHabits = repository.getActiveHabitsOnce()
+        val allLogsList = repository.allLogs.stateIn(viewModelScope).value
+        val totalCompletions = allLogsList.count { it.isCompleted }
+        val maxStreak = currentHabits.maxOfOrNull { calculateCurrentStreak(it, allLogsList) } ?: 0
+
+        if (totalCompletions >= 1) {
+            if (repository.unlockBadge("first_step")) {
+                _newlyUnlockedBadge.value = badges.value.firstOrNull { it.id == "first_step" }
+            }
+        }
+        if (maxStreak >= 3) {
+            if (repository.unlockBadge("streak_3")) {
+                _newlyUnlockedBadge.value = badges.value.firstOrNull { it.id == "streak_3" }
+            }
+        }
+        if (maxStreak >= 7) {
+            if (repository.unlockBadge("streak_7")) {
+                _newlyUnlockedBadge.value = badges.value.firstOrNull { it.id == "streak_7" }
+            }
+        }
+        if (maxStreak >= 14) {
+            if (repository.unlockBadge("streak_14")) {
+                _newlyUnlockedBadge.value = badges.value.firstOrNull { it.id == "streak_14" }
+            }
+        }
+        if (maxStreak >= 30) {
+            if (repository.unlockBadge("streak_30")) {
+                _newlyUnlockedBadge.value = badges.value.firstOrNull { it.id == "streak_30" }
+            }
+        }
+        if (currentHabits.size >= 5) {
+            if (repository.unlockBadge("habit_collector")) {
+                _newlyUnlockedBadge.value = badges.value.firstOrNull { it.id == "habit_collector" }
+            }
+        }
+        if (totalCompletions >= 100) {
+            if (repository.unlockBadge("century_club")) {
+                _newlyUnlockedBadge.value = badges.value.firstOrNull { it.id == "century_club" }
+            }
         }
     }
 
@@ -489,5 +677,61 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
             bestStreak = bestStreak,
             monthlyData = monthlyData
         )
+    }
+
+    fun calculateCurrentStreak(habit: Habit, logs: List<HabitLog>): Int {
+        val habitLogs = logs.filter { it.habitId == habit.id }
+        val formatter = DateTimeFormatter.ISO_LOCAL_DATE
+        val logMap = habitLogs.associateBy { it.date }
+        val today = LocalDate.now()
+
+        var currentStreak = 0
+        var checkDate = today
+        val todayStr = today.format(formatter)
+        val todayLog = logMap[todayStr]
+        val todayCompleted = if (habit.habitType == HabitType.QUIT) {
+            todayLog == null || todayLog.value <= 0f
+        } else {
+            todayLog?.isCompleted == true
+        }
+
+        if (todayCompleted) {
+            currentStreak++
+            checkDate = today.minusDays(1)
+        } else {
+            val yesterday = today.minusDays(1)
+            val yesterdayStr = yesterday.format(formatter)
+            val yesterdayLog = logMap[yesterdayStr]
+            val yesterdayCompleted = if (habit.habitType == HabitType.QUIT) {
+                yesterdayLog == null || yesterdayLog.value <= 0f
+            } else {
+                yesterdayLog?.isCompleted == true
+            }
+            if (yesterdayCompleted) {
+                checkDate = yesterday
+            } else {
+                checkDate = today
+            }
+        }
+
+        while (true) {
+            val dateStr = checkDate.format(formatter)
+            val log = logMap[dateStr]
+            val isDone = if (habit.habitType == HabitType.QUIT) {
+                log == null || log.value <= 0f
+            } else {
+                log?.isCompleted == true
+            }
+
+            if (isDone) {
+                if (checkDate != today || !todayCompleted) {
+                    currentStreak++
+                }
+                checkDate = checkDate.minusDays(1)
+            } else {
+                break
+            }
+        }
+        return currentStreak
     }
 }

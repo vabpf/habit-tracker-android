@@ -25,6 +25,42 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- System Notification & Alarm Receivers -->
+        <receiver
+            android:name=".receiver.HabitAlarmReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".receiver.HabitActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.example.receiver.ACTION_COMPLETE_HABIT" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".receiver.BootCompletedReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Home Screen Widget Provider -->
+        <receiver
+            android:name=".widget.HabitWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.example.widget.ACTION_TOGGLE_HABIT" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/habit_widget_info" />
+        </receiver>
     </application>
 
 </manifest>
