@@ -12,8 +12,6 @@ import com.example.MainActivity
 import com.example.R
 import com.example.data.local.AppDatabase
 import com.example.data.model.Habit
-import com.example.data.model.HabitLog
-import com.example.data.model.HabitType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -21,6 +19,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 class HabitWidgetProvider : AppWidgetProvider() {
 
@@ -60,7 +59,7 @@ class HabitWidgetProvider : AppWidgetProvider() {
                 // Calculate streaks for each habit
                 val habitStreaks = habits.associate { habit ->
                     val habitLogs = allLogs.filter { it.habitId == habit.id }
-                    habit.id to calculateStreak(habit, habitLogs)
+                    habit.id to WidgetData.calculateStreak(habit, habitLogs)
                 }
 
                 withContext(Dispatchers.Main) {
@@ -84,37 +83,11 @@ class HabitWidgetProvider : AppWidgetProvider() {
                 val pendingResult = goAsync()
                 scope.launch {
                     try {
-                        val db = AppDatabase.getInstance(context)
-                        val habit = db.habitDao().getHabitByIdOnce(habitId)
-                        if (habit != null) {
-                            val today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
-                            val existingLog = db.habitLogDao().getLog(habitId, today)
-                            if (existingLog == null) {
-                                db.habitLogDao().insertOrUpdateLog(
-                                    HabitLog(
-                                        habitId = habitId,
-                                        date = today,
-                                        value = habit.targetValue,
-                                        isCompleted = true,
-                                        timestamp = System.currentTimeMillis()
-                                    )
-                                )
-                            } else {
-                                val newCompleted = !existingLog.isCompleted
-                                val newValue = if (newCompleted) habit.targetValue else 0f
-                                db.habitLogDao().insertOrUpdateLog(
-                                    existingLog.copy(
-                                        isCompleted = newCompleted,
-                                        value = newValue,
-                                        timestamp = System.currentTimeMillis()
-                                    )
-                                )
-                            }
-                        }
+                        WidgetData.toggleHabitDay(context, habitId)
                     } catch (e: Exception) {
                         e.printStackTrace()
                     } finally {
-                        updateAllWidgets(context)
+                        WidgetData.refreshAllWidgets(context)
                         pendingResult.finish()
                     }
                 }
@@ -132,7 +105,7 @@ class HabitWidgetProvider : AppWidgetProvider() {
     ) {
         val views = RemoteViews(context.packageName, R.layout.widget_habit_tracker)
 
-        // Launch MainActivity when clicking the title/root
+        // Launch MainActivity when clicking the header or empty state
         val appIntent = Intent(context, MainActivity::class.java)
         val appPendingIntent = PendingIntent.getActivity(
             context,
@@ -141,6 +114,13 @@ class HabitWidgetProvider : AppWidgetProvider() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         views.setOnClickPendingIntent(R.id.widget_title, appPendingIntent)
+        views.setOnClickPendingIntent(R.id.widget_empty_text, appPendingIntent)
+
+        // Header: "Today" + current date
+        val todayLabel = LocalDate.now()
+            .format(DateTimeFormatter.ofPattern("EEE, MMM d", Locale.getDefault()))
+        views.setTextViewText(R.id.widget_title, "Today")
+        views.setTextViewText(R.id.widget_subtitle, todayLabel)
 
         val totalHabits = habits.size
         val completedCount = habits.count { completedHabitIds.contains(it.id) }
@@ -150,32 +130,35 @@ class HabitWidgetProvider : AppWidgetProvider() {
         views.setProgressBar(R.id.widget_progress_bar, 100, progressPercent, false)
 
         val slotViews = listOf(
-            Triple(R.id.habit_slot_1, R.id.habit_name_1, Pair(R.id.habit_btn_1, R.id.habit_streak_1)),
-            Triple(R.id.habit_slot_2, R.id.habit_name_2, Pair(R.id.habit_btn_2, R.id.habit_streak_2)),
-            Triple(R.id.habit_slot_3, R.id.habit_name_3, Pair(R.id.habit_btn_3, R.id.habit_streak_3))
+            Slot(R.id.habit_slot_1, R.id.habit_btn_1, R.id.habit_dot_1, R.id.habit_name_1, R.id.habit_streak_1),
+            Slot(R.id.habit_slot_2, R.id.habit_btn_2, R.id.habit_dot_2, R.id.habit_name_2, R.id.habit_streak_2),
+            Slot(R.id.habit_slot_3, R.id.habit_btn_3, R.id.habit_dot_3, R.id.habit_name_3, R.id.habit_streak_3)
         )
 
         if (habits.isEmpty()) {
             views.setViewVisibility(R.id.widget_empty_text, View.VISIBLE)
-            slotViews.forEach { views.setViewVisibility(it.first, View.GONE) }
+            slotViews.forEach { views.setViewVisibility(it.slotLayoutId, View.GONE) }
         } else {
             views.setViewVisibility(R.id.widget_empty_text, View.GONE)
-            for (i in 0 until 3) {
-                val (slotLayoutId, nameViewId, btnAndStreak) = slotViews[i]
-                val (btnViewId, streakViewId) = btnAndStreak
+            for (i in slotViews.indices) {
+                val slot = slotViews[i]
 
                 if (i < habits.size) {
                     val habit = habits[i]
                     val isDone = completedHabitIds.contains(habit.id)
                     val streak = habitStreaks[habit.id] ?: 0
 
-                    views.setViewVisibility(slotLayoutId, View.VISIBLE)
-                    views.setTextViewText(nameViewId, habit.name)
-                    views.setTextViewText(streakViewId, "🔥 $streak")
+                    views.setViewVisibility(slot.slotLayoutId, View.VISIBLE)
+                    views.setTextViewText(slot.nameViewId, habit.name)
+                    views.setTextViewText(slot.streakViewId, "🔥 $streak")
+
+                    // Habit color dot
+                    views.setImageViewResource(slot.dotViewId, R.drawable.widget_dot)
+                    views.setInt(slot.dotViewId, "setColorFilter", habit.colorHex.toInt())
 
                     // Set button background depending on done state
                     val bgRes = if (isDone) R.drawable.widget_circle_checked else R.drawable.widget_circle_unchecked
-                    views.setInt(btnViewId, "setBackgroundResource", bgRes)
+                    views.setInt(slot.btnViewId, "setBackgroundResource", bgRes)
 
                     // Intent for toggle action
                     val toggleIntent = Intent(context, HabitWidgetProvider::class.java).apply {
@@ -186,12 +169,12 @@ class HabitWidgetProvider : AppWidgetProvider() {
                         context,
                         (habit.id * 100 + i).toInt(),
                         toggleIntent,
-                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                     )
-                    views.setOnClickPendingIntent(btnViewId, togglePendingIntent)
-                    views.setOnClickPendingIntent(slotLayoutId, appPendingIntent)
+                    views.setOnClickPendingIntent(slot.btnViewId, togglePendingIntent)
+                    views.setOnClickPendingIntent(slot.slotLayoutId, appPendingIntent)
                 } else {
-                    views.setViewVisibility(slotLayoutId, View.GONE)
+                    views.setViewVisibility(slot.slotLayoutId, View.GONE)
                 }
             }
         }
@@ -199,58 +182,11 @@ class HabitWidgetProvider : AppWidgetProvider() {
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 
-    private fun calculateStreak(habit: Habit, logs: List<HabitLog>): Int {
-        val formatter = DateTimeFormatter.ISO_LOCAL_DATE
-        val logMap = logs.associateBy { it.date }
-        val today = LocalDate.now()
-
-        var currentStreak = 0
-        var checkDate = today
-        val todayStr = today.format(formatter)
-        val todayLog = logMap[todayStr]
-        val todayCompleted = if (habit.habitType == HabitType.QUIT) {
-            todayLog == null || todayLog.value <= 0f
-        } else {
-            todayLog?.isCompleted == true
-        }
-
-        if (todayCompleted) {
-            currentStreak++
-            checkDate = today.minusDays(1)
-        } else {
-            val yesterday = today.minusDays(1)
-            val yesterdayStr = yesterday.format(formatter)
-            val yesterdayLog = logMap[yesterdayStr]
-            val yesterdayCompleted = if (habit.habitType == HabitType.QUIT) {
-                yesterdayLog == null || yesterdayLog.value <= 0f
-            } else {
-                yesterdayLog?.isCompleted == true
-            }
-            if (yesterdayCompleted) {
-                checkDate = yesterday
-            } else {
-                checkDate = today
-            }
-        }
-
-        while (true) {
-            val dateStr = checkDate.format(formatter)
-            val log = logMap[dateStr]
-            val isDone = if (habit.habitType == HabitType.QUIT) {
-                log == null || log.value <= 0f
-            } else {
-                log?.isCompleted == true
-            }
-
-            if (isDone) {
-                if (checkDate != today || !todayCompleted) {
-                    currentStreak++
-                }
-                checkDate = checkDate.minusDays(1)
-            } else {
-                break
-            }
-        }
-        return currentStreak
-    }
+    private data class Slot(
+        val slotLayoutId: Int,
+        val btnViewId: Int,
+        val dotViewId: Int,
+        val nameViewId: Int,
+        val streakViewId: Int
+    )
 }

@@ -2,4 +2,6 @@
     <string name="app_name">Habit Tracker</string>
     <string name="widget_name">Habit Quick Tracker</string>
     <string name="widget_description">View today\'s progress and check off habits directly from your home screen.</string>
+    <string name="widget_grid_name">Habit Grid</string>
+    <string name="widget_grid_description">A contribution grid for one habit you choose. Tap to log today.</string>
 </resources>

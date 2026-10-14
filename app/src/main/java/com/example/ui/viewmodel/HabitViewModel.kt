@@ -26,6 +26,7 @@ import com.example.data.model.Badge
 import com.example.data.model.StreakFreezeState
 import com.example.receiver.NotificationHelper
 import com.example.widget.HabitWidgetProvider
+import com.example.widget.HabitGridWidgetProvider
 import java.util.Locale
 
 enum class AppScreen {
@@ -412,6 +413,7 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
             repository.toggleHabitDay(habit, dateStr)
             checkAndAwardMilestoneBadges()
             HabitWidgetProvider.updateAllWidgets(getApplication())
+            HabitGridWidgetProvider.updateAllGridWidgets(getApplication())
         }
     }
 
@@ -421,6 +423,7 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
             repository.incrementHabitDay(habit, dateStr, step)
             checkAndAwardMilestoneBadges()
             HabitWidgetProvider.updateAllWidgets(getApplication())
+            HabitGridWidgetProvider.updateAllGridWidgets(getApplication())
         }
     }
 
@@ -430,6 +433,7 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
             repository.setHabitDayValue(habit, dateStr, value)
             checkAndAwardMilestoneBadges()
             HabitWidgetProvider.updateAllWidgets(getApplication())
+            HabitGridWidgetProvider.updateAllGridWidgets(getApplication())
         }
     }
 

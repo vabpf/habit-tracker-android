@@ -8,6 +8,7 @@ import com.example.data.model.HabitLog
 import com.example.data.model.HabitType
 import com.example.data.model.UnlockedBadge
 import com.example.widget.HabitWidgetProvider
+import com.example.widget.HabitGridWidgetProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -83,6 +84,7 @@ class HabitActionReceiver : BroadcastReceiver() {
 
                     // Refresh any installed Home Screen widgets
                     HabitWidgetProvider.updateAllWidgets(context)
+                    HabitGridWidgetProvider.updateAllGridWidgets(context)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

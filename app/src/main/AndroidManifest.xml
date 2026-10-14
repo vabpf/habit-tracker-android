@@ -48,7 +48,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- Home Screen Widget Provider -->
+        <!-- Home Screen Widget Providers -->
         <receiver
             android:name=".widget.HabitWidgetProvider"
             android:exported="true"
@@ -61,6 +61,29 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/habit_widget_info" />
         </receiver>
+
+        <receiver
+            android:name=".widget.HabitGridWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_grid_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.example.widget.ACTION_GRID_TOGGLE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/habit_grid_widget_info" />
+        </receiver>
+
+        <activity
+            android:name=".widget.HabitGridWidgetConfigureActivity"
+            android:exported="true"
+            android:label="Choose habit"
+            android:theme="@style/Theme.MyApplication">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

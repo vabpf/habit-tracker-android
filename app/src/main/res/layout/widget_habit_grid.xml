@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_grid_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Header: color dot + name + streak + today toggle -->
+    <LinearLayout
+        android:id="@+id/widget_grid_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/widget_grid_dot"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:src="@drawable/widget_dot"
+            android:contentDescription="@null" />
+
+        <TextView
+            android:id="@+id/widget_grid_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Habit"
+            android:textColor="#F8F9FA"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/widget_grid_streak"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:text="🔥 0"
+            android:textColor="#FFB74D"
+            android:textSize="12sp" />
+
+        <ImageButton
+            android:id="@+id/widget_grid_toggle"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="@drawable/widget_circle_unchecked"
+            android:contentDescription="Log today" />
+    </LinearLayout>
+
+    <!-- Contribution grid rendered to a bitmap -->
+    <ImageView
+        android:id="@+id/widget_grid_image"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:contentDescription="Completion grid" />
+
+    <!-- Hint -->
+    <TextView
+        android:id="@+id/widget_grid_hint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:gravity="center"
+        android:text="Tap the grid to log today"
+        android:textColor="#757A8B"
+        android:textSize="11sp" />
+
+    <!-- Empty state: no habit chosen yet -->
+    <TextView
+        android:id="@+id/widget_grid_empty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text="Tap to choose a habit"
+        android:textColor="#9AA0A6"
+        android:textSize="12sp"
+        android:visibility="gone" />
+
+</LinearLayout>

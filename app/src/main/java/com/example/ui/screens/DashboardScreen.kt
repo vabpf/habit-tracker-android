@@ -53,6 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -569,6 +570,23 @@ fun DashboardScreen(
             }
         }
         }
+
+        // Bottom fade: scrolling content melts into the background
+        // (transparent → 70%) under the floating switcher.
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(160.dp)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            MaterialTheme.colorScheme.background.copy(alpha = 0.7f)
+                        )
+                    )
+                )
+        )
 
         // Floating Pill View Mode Switcher at bottom center (Screenshot 1 & 2)
         // Live Backdrop glass: vibrancy + 7dp blur + 26dp lens refraction,
