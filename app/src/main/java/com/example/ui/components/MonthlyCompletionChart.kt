@@ -86,6 +86,10 @@ fun MonthlyCompletionChart(
 
             if (data.isNotEmpty()) {
                 val maxVal = (data.maxOfOrNull { it.second } ?: 1).coerceAtLeast(1)
+                // Resolve theme colors here (composable context) — the Canvas
+                // draw scope below cannot read CompositionLocals.
+                val gridLineColor = LocalAppChrome.current.border
+                val pointCenterColor = MaterialTheme.colorScheme.surface
 
                 Canvas(
                     modifier = Modifier
@@ -109,7 +113,7 @@ fun MonthlyCompletionChart(
                     for (i in 0..3) {
                         val gridY = height * (i / 3f)
                         drawLine(
-                            color = LocalAppChrome.current.border,
+                            color = gridLineColor,
                             start = Offset(0f, gridY),
                             end = Offset(width, gridY),
                             strokeWidth = 1.dp.toPx()
@@ -175,7 +179,7 @@ fun MonthlyCompletionChart(
                                 center = pt
                             )
                             drawCircle(
-                                color = MaterialTheme.colorScheme.surface,
+                                color = pointCenterColor,
                                 radius = 2.dp.toPx(),
                                 center = pt
                             )
