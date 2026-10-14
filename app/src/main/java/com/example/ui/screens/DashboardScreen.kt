@@ -65,6 +65,7 @@ import com.example.ui.components.MilestoneCelebrationDialog
 import com.example.ui.components.StreakFreezeBanner
 import com.example.ui.components.StreakFreezeVaultDialog
 import com.example.ui.theme.LocalAppChrome
+import com.example.ui.components.CircleIconButton
 import com.example.ui.components.CompactHabitRow
 import com.example.ui.components.HabitActionButton
 import com.example.ui.components.HabitCard
@@ -563,7 +564,8 @@ fun DashboardScreen(
                                             }
                                         )
                                     }
-                                    }
+                                }
+                                }
                             }
                         }
                     }

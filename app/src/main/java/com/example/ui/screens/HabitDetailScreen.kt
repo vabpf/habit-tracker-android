@@ -58,6 +58,7 @@ import com.example.data.model.Habit
 import com.example.data.model.HabitType
 import com.example.data.model.TrackingType
 import com.example.ui.components.ContributionGrid
+import com.example.ui.components.CircleIconButton
 import com.example.ui.components.HabitIconCatalog
 import com.example.ui.components.MonthCalendarView
 import com.example.ui.theme.BrandPrimary
