@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.ContributionGrid
 import com.example.ui.components.HabitIconCatalog
+import com.example.ui.theme.LocalAppChrome
 import com.example.ui.theme.BrandPrimary
 import com.example.ui.theme.ThemeMode
 import com.example.ui.viewmodel.AppScreen
@@ -96,7 +97,7 @@ fun SettingsScreen(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF1E212A))
+                            .background(LocalAppChrome.current.container)
                             .testTag("settings_back_button")
                     ) {
                         Icon(
@@ -119,7 +120,7 @@ fun SettingsScreen(
                 }
             }
 
-            // Theme Mode Card (AMOLED Pure Black / Dark / Light / System)
+            // Theme Mode Card (Dark / Light / System)
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -157,7 +158,7 @@ fun SettingsScreen(
                                     )
                                 )
                                 Text(
-                                    text = "Includes pure AMOLED black for OLED screens",
+                                    text = "Dark, light, or follow the system",
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -168,7 +169,6 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         val modes = listOf(
-                            ThemeMode.AMOLED to "Pure Black (OLED)",
                             ThemeMode.DARK to "Dark Slate",
                             ThemeMode.LIGHT to "Light",
                             ThemeMode.SYSTEM to "System"
@@ -181,10 +181,10 @@ fun SettingsScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(if (isSelected) Color(0xFF262934) else Color(0xFF171920))
+                                        .background(if (isSelected) MaterialTheme.colorScheme.surfaceVariant else LocalAppChrome.current.containerAlt)
                                         .border(
                                             1.dp,
-                                            if (isSelected) BrandPrimary else Color(0xFF242732),
+                                            if (isSelected) BrandPrimary else LocalAppChrome.current.border,
                                             RoundedCornerShape(12.dp)
                                         )
                                         .clickable { viewModel.setThemeMode(mode) }
@@ -196,7 +196,7 @@ fun SettingsScreen(
                                         text = label,
                                         style = MaterialTheme.typography.bodyMedium.copy(
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                                            color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     )
                                     if (isSelected) {
@@ -269,8 +269,8 @@ fun SettingsScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(18.dp))
-                                    .background(Color(0xFF0F1014))
-                                    .border(1.dp, Color(0xFF2B2E3A), RoundedCornerShape(18.dp))
+                                    .background(MaterialTheme.colorScheme.background)
+                                    .border(1.dp, LocalAppChrome.current.border, RoundedCornerShape(18.dp))
                                     .padding(14.dp)
                             ) {
                                 Column {
@@ -294,14 +294,14 @@ fun SettingsScreen(
                                             text = featuredHabit.name,
                                             style = MaterialTheme.typography.labelMedium.copy(
                                                 fontWeight = FontWeight.Bold,
-                                                color = Color.White
+                                                color = MaterialTheme.colorScheme.onSurface
                                             )
                                         )
                                         Spacer(modifier = Modifier.weight(1f))
                                         Text(
                                             text = "Widget Preview",
                                             style = MaterialTheme.typography.labelSmall.copy(
-                                                color = Color(0xFF757A8B)
+                                                color = LocalAppChrome.current.muted
                                             )
                                         )
                                     }
@@ -406,8 +406,8 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFF231719))
-                                .border(1.dp, Color(0xFF4A2026), RoundedCornerShape(12.dp))
+                                .background(LocalAppChrome.current.dangerContainer)
+                                .border(1.dp, LocalAppChrome.current.dangerBorder, RoundedCornerShape(12.dp))
                                 .clickable {
                                     viewModel.clearAllData()
                                     Toast.makeText(context, "Room database cleared! Starting blank.", Toast.LENGTH_SHORT).show()
@@ -421,13 +421,13 @@ fun SettingsScreen(
                                     text = "Clear All Data (Start Blank)",
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = Color(0xFFFF6B6B)
+                                        color = LocalAppChrome.current.dangerText
                                     )
                                 )
                                 Text(
                                     text = "Deletes all stored habits, logs, and notes",
                                     style = MaterialTheme.typography.bodySmall.copy(
-                                        color = Color(0xFFC78282)
+                                        color = LocalAppChrome.current.dangerSubText
                                     )
                                 )
                             }
@@ -440,8 +440,8 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFF161E28))
-                                .border(1.dp, Color(0xFF233B54), RoundedCornerShape(12.dp))
+                                .background(LocalAppChrome.current.infoContainer)
+                                .border(1.dp, LocalAppChrome.current.infoBorder, RoundedCornerShape(12.dp))
                                 .clickable {
                                     viewModel.reloadSampleData()
                                     Toast.makeText(context, "Demo habits & contribution grids reloaded!", Toast.LENGTH_SHORT).show()
@@ -455,13 +455,13 @@ fun SettingsScreen(
                                     text = "Reload Demo Habits",
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF4DABF7)
+                                        color = LocalAppChrome.current.infoText
                                     )
                                 )
                                 Text(
                                     text = "Restores sample habits matching design screenshots",
                                     style = MaterialTheme.typography.bodySmall.copy(
-                                        color = Color(0xFF7FA7C7)
+                                        color = LocalAppChrome.current.infoSubText
                                     )
                                 )
                             }
@@ -492,7 +492,7 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .size(34.dp)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xFF1E212A)),
+                                .background(LocalAppChrome.current.container),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -540,7 +540,7 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .size(34.dp)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xFF1E212A)),
+                                .background(LocalAppChrome.current.container),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(

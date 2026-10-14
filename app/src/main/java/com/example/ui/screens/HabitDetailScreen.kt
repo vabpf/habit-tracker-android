@@ -62,6 +62,7 @@ import com.example.ui.components.ContributionGrid
 import com.example.ui.components.HabitIconCatalog
 import com.example.ui.components.MonthCalendarView
 import com.example.ui.theme.BrandPrimary
+import com.example.ui.theme.LocalAppChrome
 import com.example.ui.viewmodel.AppScreen
 import com.example.ui.viewmodel.HabitViewModel
 import java.time.LocalDate
@@ -140,7 +141,7 @@ fun HabitDetailScreen(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF1E212A))
+                            .background(LocalAppChrome.current.container)
                             .testTag("detail_back_button")
                     ) {
                         Icon(
@@ -158,7 +159,7 @@ fun HabitDetailScreen(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF1E212A))
+                                .background(LocalAppChrome.current.container)
                                 .testTag("reminders_button")
                         ) {
                             Icon(
@@ -175,7 +176,7 @@ fun HabitDetailScreen(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF1E212A))
+                                .background(LocalAppChrome.current.container)
                                 .testTag("notes_screen_button")
                         ) {
                             Icon(
@@ -192,7 +193,7 @@ fun HabitDetailScreen(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF1E212A))
+                                .background(LocalAppChrome.current.container)
                                 .testTag("archive_habit_button")
                         ) {
                             Icon(
@@ -209,7 +210,7 @@ fun HabitDetailScreen(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF1E212A))
+                                .background(LocalAppChrome.current.container)
                                 .testTag("edit_habit_button")
                         ) {
                             Icon(
@@ -310,7 +311,7 @@ fun HabitDetailScreen(
                     Row(
                         modifier = Modifier
                             .clip(RoundedCornerShape(14.dp))
-                            .background(Color(0xFF1B1E26))
+                            .background(LocalAppChrome.current.containerAlt)
                             .border(1.dp, habitColor.copy(alpha = 0.3f), RoundedCornerShape(14.dp))
                             .padding(horizontal = 14.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -335,8 +336,8 @@ fun HabitDetailScreen(
                     Row(
                         modifier = Modifier
                             .clip(RoundedCornerShape(14.dp))
-                            .background(Color(0xFF1B1E26))
-                            .border(1.dp, Color(0xFF282C38), RoundedCornerShape(14.dp))
+                            .background(LocalAppChrome.current.containerAlt)
+                            .border(1.dp, LocalAppChrome.current.border, RoundedCornerShape(14.dp))
                             .padding(horizontal = 14.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -360,8 +361,8 @@ fun HabitDetailScreen(
                     Row(
                         modifier = Modifier
                             .clip(RoundedCornerShape(14.dp))
-                            .background(Color(0xFF1B1E26))
-                            .border(1.dp, Color(0xFF282C38), RoundedCornerShape(14.dp))
+                            .background(LocalAppChrome.current.containerAlt)
+                            .border(1.dp, LocalAppChrome.current.border, RoundedCornerShape(14.dp))
                             .padding(horizontal = 14.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -539,10 +540,10 @@ fun HabitDetailScreen(
                             .fillMaxWidth()
                             .testTag("note_input_field"),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFF1E212A),
-                            unfocusedContainerColor = Color(0xFF1E212A),
+                            focusedContainerColor = LocalAppChrome.current.container,
+                            unfocusedContainerColor = LocalAppChrome.current.container,
                             focusedBorderColor = habitColor,
-                            unfocusedBorderColor = Color(0xFF282C38)
+                            unfocusedBorderColor = LocalAppChrome.current.border
                         )
                     )
                 }
@@ -570,7 +571,7 @@ fun HabitDetailScreen(
                     Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
-            containerColor = Color(0xFF161820)
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 
@@ -600,10 +601,10 @@ fun HabitDetailScreen(
                             .fillMaxWidth()
                             .testTag("value_input_field"),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFF1E212A),
-                            unfocusedContainerColor = Color(0xFF1E212A),
+                            focusedContainerColor = LocalAppChrome.current.container,
+                            unfocusedContainerColor = LocalAppChrome.current.container,
                             focusedBorderColor = habitColor,
-                            unfocusedBorderColor = Color(0xFF282C38)
+                            unfocusedBorderColor = LocalAppChrome.current.border
                         )
                     )
                 }
@@ -625,7 +626,7 @@ fun HabitDetailScreen(
                     Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
-            containerColor = Color(0xFF161820)
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 }

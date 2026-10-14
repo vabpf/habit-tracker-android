@@ -5,6 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 
 private val DarkColorScheme = darkColorScheme(
@@ -15,22 +16,6 @@ private val DarkColorScheme = darkColorScheme(
     secondary = BrandSecondary,
     onSecondary = Color.Black,
     background = DarkBackground,
-    onBackground = DarkTextPrimary,
-    surface = DarkSurface,
-    onSurface = DarkTextPrimary,
-    surfaceVariant = DarkSurfaceVariant,
-    onSurfaceVariant = DarkTextSecondary,
-    outline = DarkBorder
-)
-
-private val AmoledColorScheme = darkColorScheme(
-    primary = BrandPrimary,
-    onPrimary = Color.Black,
-    primaryContainer = BrandPrimaryContainer,
-    onPrimaryContainer = Color.White,
-    secondary = BrandSecondary,
-    onSecondary = Color.Black,
-    background = AmoledBackground,
     onBackground = DarkTextPrimary,
     surface = DarkSurface,
     onSurface = DarkTextPrimary,
@@ -58,26 +43,31 @@ private val LightColorScheme = lightColorScheme(
 enum class ThemeMode {
     SYSTEM,
     DARK,
-    AMOLED,
     LIGHT
 }
 
 @Composable
 fun HabitTrackerTheme(
-    themeMode: ThemeMode = ThemeMode.AMOLED,
+    themeMode: ThemeMode = ThemeMode.SYSTEM,
     content: @Composable () -> Unit
 ) {
     val systemDark = isSystemInDarkTheme()
     val colorScheme = when (themeMode) {
-        ThemeMode.AMOLED -> AmoledColorScheme
         ThemeMode.DARK -> DarkColorScheme
         ThemeMode.LIGHT -> LightColorScheme
         ThemeMode.SYSTEM -> if (systemDark) DarkColorScheme else LightColorScheme
     }
+    val isDark = when (themeMode) {
+        ThemeMode.DARK -> true
+        ThemeMode.LIGHT -> false
+        ThemeMode.SYSTEM -> systemDark
+    }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(LocalAppChrome provides if (isDark) DarkChrome else LightChrome) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }

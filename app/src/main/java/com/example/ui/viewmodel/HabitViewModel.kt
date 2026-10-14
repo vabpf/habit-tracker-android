@@ -67,7 +67,7 @@ data class HabitUiState(
     val selectedHabit: Habit? = null,
     val viewMode: DashboardViewMode = DashboardViewMode.CLASSIC,
     val selectedYear: Int = LocalDate.now().year,
-    val themeMode: ThemeMode = ThemeMode.AMOLED,
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val currentScreen: AppScreen = AppScreen.DASHBOARD,
     val editingHabit: Habit? = null,
     val isLoading: Boolean = false,
@@ -111,7 +111,7 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
     private val _selectedYear = MutableStateFlow(LocalDate.now().year)
     val selectedYear: StateFlow<Int> = _selectedYear.asStateFlow()
 
-    private val _themeMode = MutableStateFlow(ThemeMode.AMOLED)
+    private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
     val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
 
     private val _editingHabit = MutableStateFlow<Habit?>(null)

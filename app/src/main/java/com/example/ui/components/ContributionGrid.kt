@@ -27,8 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.Habit
 import com.example.data.model.HabitLog
 import com.example.data.model.HabitType
-import com.example.ui.theme.TileBorderDark
-import com.example.ui.theme.TileInactiveDark
+import com.example.ui.theme.LocalAppChrome
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -44,7 +43,10 @@ fun ContributionGrid(
     rows: Int = 7,
     showLabels: Boolean = false,
     tileHeight: Dp = 10.dp,
-    onDateClick: ((LocalDate) -> Unit)? = null
+    onDateClick: ((LocalDate) -> Unit)? = null,
+    /** Last date visible in the grid. Defaults to today; Insights passes
+     * Dec 31 of the selected year so the grid follows the year picker. */
+    endDate: LocalDate = LocalDate.now()
 ) {
     val completedDatesMap = remember(logs) {
         logs.associate { it.date to it.value }
@@ -53,13 +55,14 @@ fun ContributionGrid(
     val today = remember { LocalDate.now() }
     val formatter = remember { DateTimeFormatter.ISO_LOCAL_DATE }
 
-    // End on current week Sunday (or Saturday) so columns align
-    val currentDayOfWeek = today.dayOfWeek.value // 1 = Monday .. 7 = Sunday
+    // End on the end of the week containing endDate so columns align.
+    // `today` (real current date) still drives future-cell dimming.
+    val currentDayOfWeek = endDate.dayOfWeek.value // 1 = Monday .. 7 = Sunday
     val daysToEndOfWeek = 7 - currentDayOfWeek
-    val endDate = today.plusDays(daysToEndOfWeek.toLong())
+    val windowEnd = endDate.plusDays(daysToEndOfWeek.toLong())
 
     val totalDays = columns * rows
-    val startDate = endDate.minusDays((totalDays - 1).toLong())
+    val startDate = windowEnd.minusDays((totalDays - 1).toLong())
 
     // Compute month markers for header if showLabels is true
     val monthMarkers = remember(columns, startDate) {
@@ -81,8 +84,7 @@ fun ContributionGrid(
     }
 
     val habitColor = Color(habit.colorHex)
-    val inactiveColor = TileInactiveDark
-    val borderColor = TileBorderDark
+    val inactiveColor = LocalAppChrome.current.tileInactive
 
     // Square tiles: derive tile size from available width so cellWidth == cellHeight.
     // tileHeight param is kept for backward compatibility but ignored for sizing.

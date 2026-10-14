@@ -31,6 +31,7 @@ import com.example.data.model.Habit
 import com.example.data.model.HabitLog
 import com.example.data.model.HabitType
 import com.example.data.model.TrackingType
+import com.example.ui.theme.LocalAppChrome
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -108,11 +109,11 @@ fun CompactHabitRow(
                         .clip(RoundedCornerShape(10.dp))
                         .background(
                             if (isCompleted) habitColor
-                            else Color(0xFF16181F)
+                            else LocalAppChrome.current.chip
                         )
                         .border(
                             width = 1.dp,
-                            color = if (isCompleted) habitColor else Color(0xFF282C36),
+                            color = if (isCompleted) habitColor else LocalAppChrome.current.border,
                             shape = RoundedCornerShape(10.dp)
                         )
                         .clickable { onDayClick(date) }

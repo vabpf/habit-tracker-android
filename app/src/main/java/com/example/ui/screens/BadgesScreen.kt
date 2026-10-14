@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.Badge
 import com.example.ui.theme.BrandPrimary
+import com.example.ui.theme.LocalAppChrome
 import com.example.ui.viewmodel.AppScreen
 import com.example.ui.viewmodel.HabitViewModel
 
@@ -90,7 +91,7 @@ fun BadgesScreen(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF1E212A))
+                        .background(LocalAppChrome.current.container)
                         .testTag("badges_back_button")
                 ) {
                     Icon(
@@ -125,8 +126,8 @@ fun BadgesScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFF1C202B))
-                    .border(1.dp, Color(0xFF2C3140), RoundedCornerShape(16.dp))
+                    .background(LocalAppChrome.current.container)
+                    .border(1.dp, LocalAppChrome.current.border, RoundedCornerShape(16.dp))
                     .padding(14.dp)
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -137,10 +138,10 @@ fun BadgesScreen(
                     ) {
                         Text(
                             text = "Milestone Mastery",
-                            style = MaterialTheme.typography.titleSmall.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.White
-                            )
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
                         )
                         Text(
                             text = if (totalCount > 0) "${(unlockedCount * 100) / totalCount}%" else "0%",
@@ -158,7 +159,7 @@ fun BadgesScreen(
                             .height(8.dp)
                             .clip(RoundedCornerShape(4.dp)),
                         color = BrandPrimary,
-                        trackColor = Color(0xFF2B303E)
+                        trackColor = LocalAppChrome.current.border
                     )
                 }
             }
@@ -189,10 +190,10 @@ fun BadgeCard(badge: Badge) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(if (isUnlocked) Color(0xFF1D222E) else Color(0xFF151820))
+            .background(if (isUnlocked) LocalAppChrome.current.containerAlt else LocalAppChrome.current.tileDim)
             .border(
                 1.dp,
-                if (isUnlocked) Color(0xFFFFD54F).copy(alpha = 0.4f) else Color(0xFF282C38),
+                if (isUnlocked) Color(0xFFFFD54F).copy(alpha = 0.4f) else LocalAppChrome.current.border,
                 RoundedCornerShape(18.dp)
             )
             .padding(14.dp)
@@ -208,11 +209,11 @@ fun BadgeCard(badge: Badge) {
                     .size(54.dp)
                     .clip(CircleShape)
                     .background(
-                        if (isUnlocked) Color(0xFFFFD54F).copy(alpha = 0.16f) else Color(0xFF1F232D)
+                        if (isUnlocked) Color(0xFFFFD54F).copy(alpha = 0.16f) else LocalAppChrome.current.containerAlt
                     )
                     .border(
                         1.dp,
-                        if (isUnlocked) Color(0xFFFFD54F) else Color(0xFF333846),
+                        if (isUnlocked) Color(0xFFFFD54F) else LocalAppChrome.current.muted,
                         CircleShape
                     ),
                 contentAlignment = Alignment.Center
@@ -233,7 +234,7 @@ fun BadgeCard(badge: Badge) {
                     Icon(
                         imageVector = Icons.Filled.Lock,
                         contentDescription = "Locked",
-                        tint = Color(0xFF757A89),
+                        tint = LocalAppChrome.current.muted,
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -245,7 +246,7 @@ fun BadgeCard(badge: Badge) {
                 text = badge.title,
                 style = MaterialTheme.typography.titleSmall.copy(
                     fontWeight = FontWeight.Bold,
-                    color = if (isUnlocked) MaterialTheme.colorScheme.onSurface else Color(0xFF8E93A3)
+                    color = if (isUnlocked) MaterialTheme.colorScheme.onSurface else LocalAppChrome.current.muted
                 ),
                 textAlign = TextAlign.Center
             )
@@ -255,7 +256,7 @@ fun BadgeCard(badge: Badge) {
             Text(
                 text = badge.description,
                 style = MaterialTheme.typography.bodySmall.copy(
-                    color = if (isUnlocked) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFF636875),
+                    color = if (isUnlocked) MaterialTheme.colorScheme.onSurfaceVariant else LocalAppChrome.current.muted,
                     fontSize = 11.sp
                 ),
                 textAlign = TextAlign.Center,
@@ -272,7 +273,7 @@ fun BadgeCard(badge: Badge) {
                         .height(5.dp)
                         .clip(RoundedCornerShape(3.dp)),
                     color = Color(0xFF5C6BC0),
-                    trackColor = Color(0xFF262A36)
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -280,7 +281,7 @@ fun BadgeCard(badge: Badge) {
                 Text(
                     text = "${badge.current} / ${badge.target}",
                     style = MaterialTheme.typography.labelSmall.copy(
-                        color = Color(0xFF8E93A3),
+                        color = LocalAppChrome.current.muted,
                         fontSize = 10.sp
                     )
                 )

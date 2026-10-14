@@ -61,6 +61,7 @@ import com.example.ui.components.ContributionGrid
 import com.example.ui.components.HabitIconCatalog
 import com.example.ui.components.MonthlyCompletionChart
 import com.example.ui.theme.BrandPrimary
+import com.example.ui.theme.LocalAppChrome
 import com.example.ui.viewmodel.AppScreen
 import com.example.ui.viewmodel.HabitViewModel
 import java.time.LocalDate
@@ -135,11 +136,11 @@ fun AnalyticsScreen(
                                     .size(42.dp)
                                     .clip(CircleShape)
                                     .background(
-                                        if (isSelected) BrandPrimary else Color(0xFF1B1D25)
+                                        if (isSelected) BrandPrimary else LocalAppChrome.current.container
                                     )
                                     .border(
                                         width = 1.dp,
-                                        color = if (isSelected) BrandPrimary else Color(0xFF2B2E3A),
+                                        color = if (isSelected) BrandPrimary else LocalAppChrome.current.border,
                                         shape = CircleShape
                                     )
                                     .clickable { activeHabitId = habit.id }
@@ -282,6 +283,14 @@ fun AnalyticsScreen(
                         rows = 7,
                         showLabels = true,
                         tileHeight = 9.dp,
+                        // Follow the year picker: show the window ending at
+                        // Dec 31 of the selected year (or today for the
+                        // current/future years).
+                        endDate = remember(selectedYear) {
+                            val now = LocalDate.now()
+                            if (selectedYear >= now.year) now
+                            else LocalDate.of(selectedYear, 12, 31)
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp)
@@ -515,7 +524,7 @@ fun AnalyticsScreen(
                         .fillMaxWidth()
                         .height(52.dp),
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E212A))
+                    colors = ButtonDefaults.buttonColors(containerColor = LocalAppChrome.current.container)
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Share,

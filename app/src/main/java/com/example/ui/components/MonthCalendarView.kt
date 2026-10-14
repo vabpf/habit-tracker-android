@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.Habit
 import com.example.data.model.HabitLog
 import com.example.data.model.HabitType
+import com.example.ui.theme.LocalAppChrome
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -156,9 +157,9 @@ fun MonthCalendarView(
                             .clip(RoundedCornerShape(12.dp))
                             .background(
                                 when {
-                                    !isCurrentMonth -> Color(0xFF13151A)
+                                    !isCurrentMonth -> LocalAppChrome.current.tileDim
                                     isCompleted -> habitColor.copy(alpha = 0.22f)
-                                    else -> Color(0xFF191B22)
+                                    else -> LocalAppChrome.current.tileInactive
                                 }
                             )
                             .border(
@@ -166,7 +167,7 @@ fun MonthCalendarView(
                                 color = when {
                                     isToday -> habitColor
                                     isCompleted -> habitColor.copy(alpha = 0.45f)
-                                    else -> Color(0xFF242732)
+                                    else -> LocalAppChrome.current.border
                                 },
                                 shape = RoundedCornerShape(12.dp)
                             )
@@ -191,10 +192,10 @@ fun MonthCalendarView(
                                     fontWeight = if (isToday || isCompleted) FontWeight.SemiBold else FontWeight.Normal,
                                     fontSize = 13.sp,
                                     color = when {
-                                        !isCurrentMonth -> Color(0xFF4C505E)
-                                        isFuture -> Color(0xFF4C505E)
-                                        isCompleted -> Color.White
-                                        else -> Color(0xFFC7CBD6)
+                                        !isCurrentMonth -> LocalAppChrome.current.muted
+                                        isFuture -> LocalAppChrome.current.muted
+                                        isCompleted -> MaterialTheme.colorScheme.onSurface
+                                        else -> MaterialTheme.colorScheme.onSurface
                                     }
                                 )
                             )
@@ -239,8 +240,8 @@ fun MonthCalendarView(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFF1E212A))
-                    .border(1.dp, Color(0xFF282C38), RoundedCornerShape(12.dp))
+                    .background(LocalAppChrome.current.container)
+                    .border(1.dp, LocalAppChrome.current.border, RoundedCornerShape(12.dp))
                     .padding(horizontal = 12.dp, vertical = 7.dp)
             ) {
                 Icon(
@@ -266,8 +267,8 @@ fun MonthCalendarView(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF1E212A))
-                        .border(1.dp, Color(0xFF282C38), CircleShape)
+                        .background(LocalAppChrome.current.container)
+                        .border(1.dp, LocalAppChrome.current.border, CircleShape)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
@@ -281,8 +282,8 @@ fun MonthCalendarView(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF1E212A))
-                        .border(1.dp, Color(0xFF282C38), CircleShape)
+                        .background(LocalAppChrome.current.container)
+                        .border(1.dp, LocalAppChrome.current.border, CircleShape)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,

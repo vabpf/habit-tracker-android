@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.StreakFreezeState
 import com.example.ui.theme.BrandPrimary
+import com.example.ui.theme.LocalAppChrome
 
 @Composable
 fun StreakFreezeBanner(
@@ -56,7 +57,7 @@ fun StreakFreezeBanner(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFF13202E))
+            .background(LocalAppChrome.current.infoContainer)
             .border(1.dp, Color(0xFF4FC3F7).copy(alpha = 0.35f), RoundedCornerShape(16.dp))
             .clickable { onOpenVault() }
             .padding(horizontal = 14.dp, vertical = 10.dp)
@@ -85,13 +86,13 @@ fun StreakFreezeBanner(
                 text = "Streak Shield Active",
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFE1F5FE)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             )
             Text(
                 text = "${state.availableTokens}/${state.maxTokens} freeze shields remaining",
                 style = MaterialTheme.typography.bodySmall.copy(
-                    color = Color(0xFF81D4FA)
+                    color = LocalAppChrome.current.infoText
                 )
             )
         }
@@ -157,7 +158,7 @@ fun StreakFreezeVaultDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFF13202E))
+                        .background(LocalAppChrome.current.infoContainer)
                         .border(1.dp, Color(0xFF4FC3F7).copy(alpha = 0.2f), RoundedCornerShape(14.dp))
                         .padding(14.dp)
                 ) {
@@ -167,16 +168,16 @@ fun StreakFreezeVaultDialog(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Shields Available", color = Color(0xFFE1F5FE), fontWeight = FontWeight.SemiBold)
-                            Text("❄️ ${state.availableTokens} / ${state.maxTokens}", color = Color(0xFF4FC3F7), fontWeight = FontWeight.Bold)
+                            Text("Shields Available", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
+                            Text("❄️ ${state.availableTokens} / ${state.maxTokens}", color = LocalAppChrome.current.infoText, fontWeight = FontWeight.Bold)
                         }
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Lifetime Rescues", color = Color(0xFFB0BEC5), fontSize = 13.sp)
-                            Text("${state.totalFreezesUsed}", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                            Text("Lifetime Rescues", color = LocalAppChrome.current.muted, fontSize = 13.sp)
+                            Text("${state.totalFreezesUsed}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                         }
                     }
                 }
@@ -186,7 +187,7 @@ fun StreakFreezeVaultDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFF1C2028))
+                        .background(LocalAppChrome.current.containerAlt)
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -194,11 +195,11 @@ fun StreakFreezeVaultDialog(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "Auto-Rescue Missed Days",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold, color = Color.White)
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                         )
                         Text(
                             text = "Preserves streaks automatically without manual intervention",
-                            style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF8E93A3))
+                            style = MaterialTheme.typography.bodySmall.copy(color = LocalAppChrome.current.muted)
                         )
                     }
                     Switch(
@@ -241,10 +242,10 @@ fun StreakFreezeVaultDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close", color = Color(0xFF4FC3F7), fontWeight = FontWeight.Bold)
+                Text("Close", color = LocalAppChrome.current.infoText, fontWeight = FontWeight.Bold)
             }
         },
-        containerColor = Color(0xFF1B1E26),
+        containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(20.dp)
     )
 }

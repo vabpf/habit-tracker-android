@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.example.data.model.Habit
 import com.example.data.model.HabitType
 import com.example.data.model.TrackingType
+import com.example.ui.theme.LocalAppChrome
 
 @Composable
 fun HabitActionButton(
@@ -48,11 +49,11 @@ fun HabitActionButton(
     when (habit.trackingType) {
         TrackingType.YES_NO -> {
             val bgColor by animateColorAsState(
-                targetValue = if (isCompleted) habitColor else Color(0xFF1E2129),
+                targetValue = if (isCompleted) habitColor else LocalAppChrome.current.container,
                 label = "bgColor"
             )
             val iconColor by animateColorAsState(
-                targetValue = if (isCompleted) Color(0xFF0F1014) else Color(0xFF5A606E),
+                targetValue = if (isCompleted) Color(0xFF0F1014) else LocalAppChrome.current.muted,
                 label = "iconColor"
             )
 
@@ -64,7 +65,7 @@ fun HabitActionButton(
                     .background(bgColor)
                     .border(
                         width = 1.dp,
-                        color = if (isCompleted) habitColor else Color(0xFF2C303B),
+                        color = if (isCompleted) habitColor else LocalAppChrome.current.border,
                         shape = RoundedCornerShape(14.dp)
                     )
                     .clickable { onActionClick() }
@@ -94,7 +95,7 @@ fun HabitActionButton(
                 CircularProgressIndicator(
                     progress = { 1f },
                     modifier = Modifier.size(42.dp),
-                    color = Color(0xFF232631),
+                    color = LocalAppChrome.current.border,
                     strokeWidth = 3.5.dp,
                     trackColor = Color.Transparent
                 )

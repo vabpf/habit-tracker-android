@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.CornerBasedShape
+import com.example.ui.theme.LocalAppChrome
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.LayerBackdrop
 import com.kyant.backdrop.drawBackdrop
@@ -71,14 +72,19 @@ fun Modifier.glassEffect(
     contentModifier: Modifier = Modifier
 ): Modifier {
     val activeBackdrop = backdrop ?: LocalBackdrop.current
+    // Resolve the default frost tint from the current theme so the glass
+    // reads correctly in both dark and light mode. Explicit colors pass
+    // through unchanged.
+    val chrome = LocalAppChrome.current
+    val isDefaultContainer = containerColor == FrostGlassDefaults.containerColor
     val effectiveColor = if (liveBlur && activeBackdrop != null) {
-        if (containerColor == FrostGlassDefaults.containerColor) {
-            FrostGlassDefaults.liveBlurContainerColor
+        if (isDefaultContainer) {
+            chrome.glassLiveContainer
         } else {
             containerColor
         }
     } else {
-        containerColor
+        if (isDefaultContainer) chrome.glassContainer else containerColor
     }
 
     return if (liveBlur && activeBackdrop != null) {

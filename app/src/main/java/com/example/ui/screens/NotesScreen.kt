@@ -58,6 +58,7 @@ import com.example.data.model.HabitNote
 import com.example.ui.components.ContributionGrid
 import com.example.ui.components.HabitIconCatalog
 import com.example.ui.theme.BrandPrimary
+import com.example.ui.theme.LocalAppChrome
 import com.example.ui.viewmodel.AppScreen
 import com.example.ui.viewmodel.HabitViewModel
 import java.time.LocalDate
@@ -128,7 +129,7 @@ fun NotesScreen(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF1E212A))
+                            .background(LocalAppChrome.current.container)
                             .testTag("notes_back_button")
                     ) {
                         Icon(
@@ -181,7 +182,7 @@ fun NotesScreen(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF1E212A))
+                            .background(LocalAppChrome.current.container)
                             .testTag("add_note_button")
                     ) {
                         Icon(
@@ -361,10 +362,10 @@ fun NotesScreen(
                         minLines = 3,
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFF1E212A),
-                            unfocusedContainerColor = Color(0xFF1E212A),
+                            focusedContainerColor = LocalAppChrome.current.container,
+                            unfocusedContainerColor = LocalAppChrome.current.container,
                             focusedBorderColor = habitColor,
-                            unfocusedBorderColor = Color(0xFF282C38)
+                            unfocusedBorderColor = LocalAppChrome.current.border
                         )
                     )
                 }
@@ -397,7 +398,7 @@ fun NotesScreen(
                     Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
-            containerColor = Color(0xFF161820)
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 }

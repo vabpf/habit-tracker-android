@@ -72,6 +72,7 @@ import com.example.ui.theme.HabitSand
 import com.example.ui.theme.HabitSky
 import com.example.ui.theme.HabitSlate
 import com.example.ui.theme.HabitYellow
+import com.example.ui.theme.LocalAppChrome
 import com.example.ui.viewmodel.AppScreen
 import com.example.ui.viewmodel.HabitViewModel
 
@@ -145,7 +146,7 @@ fun EditHabitScreen(
                         modifier = Modifier
                             .size(38.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF1E212A))
+                            .background(LocalAppChrome.current.container)
                             .testTag("edit_habit_close_button")
                     ) {
                         Icon(
@@ -176,7 +177,7 @@ fun EditHabitScreen(
                             modifier = Modifier
                                 .size(38.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF2A1E22))
+                                .background(LocalAppChrome.current.dangerContainer)
                                 .testTag("delete_habit_button")
                         ) {
                             Icon(
@@ -228,10 +229,10 @@ fun EditHabitScreen(
                             modifier = Modifier
                                 .size(44.dp)
                                 .clip(CircleShape)
-                                .background(if (isSelected) currentColor.copy(alpha = 0.25f) else Color(0xFF161820))
+                                .background(if (isSelected) currentColor.copy(alpha = 0.25f) else LocalAppChrome.current.chip)
                                 .border(
                                     width = if (isSelected) 2.dp else 1.dp,
-                                    color = if (isSelected) currentColor else Color(0xFF262935),
+                                    color = if (isSelected) currentColor else LocalAppChrome.current.border,
                                     shape = CircleShape
                                 )
                                 .clickable { iconName = key },
@@ -240,7 +241,7 @@ fun EditHabitScreen(
                             Icon(
                                 imageVector = HabitIconCatalog.getIcon(key),
                                 contentDescription = key,
-                                tint = if (isSelected) currentColor else Color(0xFF6C7282),
+                                tint = if (isSelected) currentColor else LocalAppChrome.current.muted,
                                 modifier = Modifier.size(22.dp)
                             )
                         }
@@ -270,10 +271,10 @@ fun EditHabitScreen(
                             .testTag("habit_name_input"),
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFF161820),
-                            unfocusedContainerColor = Color(0xFF161820),
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                             focusedBorderColor = currentColor,
-                            unfocusedBorderColor = Color(0xFF282C38)
+                            unfocusedBorderColor = LocalAppChrome.current.border
                         )
                     )
                 }
@@ -301,10 +302,10 @@ fun EditHabitScreen(
                             .testTag("habit_description_input"),
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFF161820),
-                            unfocusedContainerColor = Color(0xFF161820),
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                             focusedBorderColor = currentColor,
-                            unfocusedBorderColor = Color(0xFF282C38)
+                            unfocusedBorderColor = LocalAppChrome.current.border
                         )
                     )
                 }
@@ -370,8 +371,8 @@ fun EditHabitScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(16.dp))
-                            .background(Color(0xFF161820))
-                            .border(1.dp, Color(0xFF282C38), RoundedCornerShape(16.dp))
+                            .background(LocalAppChrome.current.chip)
+                            .border(1.dp, LocalAppChrome.current.border, RoundedCornerShape(16.dp))
                             .padding(4.dp)
                     ) {
                         // Build A Habit
@@ -380,7 +381,7 @@ fun EditHabitScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(if (isBuild) Color(0xFF272A36) else Color.Transparent)
+                                .background(if (isBuild) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent)
                                 .clickable { habitType = HabitType.BUILD }
                                 .padding(vertical = 10.dp)
                                 .testTag("type_build_button"),
@@ -390,7 +391,7 @@ fun EditHabitScreen(
                                 text = "Build A Habit",
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = if (isBuild) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isBuild) Color.White else Color(0xFF8E93A3)
+                                    color = if (isBuild) MaterialTheme.colorScheme.onSurface else LocalAppChrome.current.muted
                                 )
                             )
                         }
@@ -401,7 +402,7 @@ fun EditHabitScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(if (isQuit) Color(0xFF272A36) else Color.Transparent)
+                                .background(if (isQuit) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent)
                                 .clickable { habitType = HabitType.QUIT }
                                 .padding(vertical = 10.dp)
                                 .testTag("type_quit_button"),
@@ -411,7 +412,7 @@ fun EditHabitScreen(
                                 text = "Quit A Habit",
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = if (isQuit) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isQuit) Color.White else Color(0xFF8E93A3)
+                                    color = if (isQuit) MaterialTheme.colorScheme.onSurface else LocalAppChrome.current.muted
                                 )
                             )
                         }
@@ -445,8 +446,8 @@ fun EditHabitScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(16.dp))
-                            .background(Color(0xFF161820))
-                            .border(1.dp, Color(0xFF282C38), RoundedCornerShape(16.dp))
+                            .background(LocalAppChrome.current.chip)
+                            .border(1.dp, LocalAppChrome.current.border, RoundedCornerShape(16.dp))
                             .padding(4.dp)
                     ) {
                         TrackingType.entries.forEach { t ->
@@ -460,7 +461,7 @@ fun EditHabitScreen(
                                 modifier = Modifier
                                     .weight(1f)
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(if (isSelected) Color(0xFF272A36) else Color.Transparent)
+                                    .background(if (isSelected) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent)
                                     .clickable { trackingType = t }
                                     .padding(vertical = 10.dp)
                                     .testTag("tracking_mode_${t.name}"),
@@ -470,7 +471,7 @@ fun EditHabitScreen(
                                     text = label,
                                     style = MaterialTheme.typography.labelMedium.copy(
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (isSelected) Color.White else Color(0xFF8E93A3)
+                                        color = if (isSelected) MaterialTheme.colorScheme.onSurface else LocalAppChrome.current.muted
                                     )
                                 )
                             }
@@ -504,8 +505,8 @@ fun EditHabitScreen(
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(14.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedContainerColor = Color(0xFF161820),
-                                    unfocusedContainerColor = Color(0xFF161820)
+                                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
                                 )
                             )
 
@@ -517,8 +518,8 @@ fun EditHabitScreen(
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(14.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedContainerColor = Color(0xFF161820),
-                                    unfocusedContainerColor = Color(0xFF161820)
+                                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
                                 )
                             )
                         }
@@ -545,8 +546,8 @@ fun EditHabitScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(if (isSelected) currentColor.copy(alpha = 0.2f) else Color(0xFF161820))
-                                    .border(1.dp, if (isSelected) currentColor else Color(0xFF282C38), RoundedCornerShape(12.dp))
+                                    .background(if (isSelected) currentColor.copy(alpha = 0.2f) else LocalAppChrome.current.chip)
+                                    .border(1.dp, if (isSelected) currentColor else LocalAppChrome.current.border, RoundedCornerShape(12.dp))
                                     .clickable { category = cat }
                                     .padding(horizontal = 14.dp, vertical = 8.dp)
                             ) {

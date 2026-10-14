@@ -24,7 +24,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,6 +39,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.data.local.AppDatabase
 import com.example.data.model.Habit
+import com.example.ui.theme.HabitTrackerTheme
+import com.example.ui.theme.ThemeMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -67,7 +68,7 @@ class HabitGridWidgetConfigureActivity : ComponentActivity() {
         }
 
         setContent {
-            MaterialTheme(colorScheme = gridConfigColorScheme()) {
+            HabitTrackerTheme(themeMode = ThemeMode.SYSTEM) {
                 HabitPickerScreen(
                     onHabitSelected = { habit -> confirmSelection(habit.id) }
                 )
@@ -83,18 +84,6 @@ class HabitGridWidgetConfigureActivity : ComponentActivity() {
         finish()
     }
 }
-
-private fun gridConfigColorScheme() = darkColorScheme(
-    background = Color(0xFF0E1015),
-    onBackground = Color(0xFFF8F9FA),
-    surface = Color(0xFF16181F),
-    onSurface = Color(0xFFF8F9FA),
-    surfaceVariant = Color(0xFF272A35),
-    onSurfaceVariant = Color(0xFF9AA0A6),
-    outline = Color(0xFF272A35),
-    primary = Color(0xFFA28BF7),
-    onPrimary = Color.Black
-)
 
 @Composable
 private fun HabitPickerScreen(onHabitSelected: (Habit) -> Unit) {

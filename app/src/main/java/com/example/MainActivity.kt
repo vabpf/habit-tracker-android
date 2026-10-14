@@ -1,14 +1,18 @@
 package com.example
 
 import android.app.Activity
+import android.graphics.Color as AndroidColor
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -16,7 +20,9 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.screens.AnalyticsScreen
@@ -37,6 +43,20 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Force true edge-to-edge explicitly instead of relying on
+        // enableEdgeToEdge() defaults alone: some OEM skins (e.g. HyperOS)
+        // otherwise keep an opaque black status/navigation bar.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        @Suppress("DEPRECATION")
+        window.statusBarColor = AndroidColor.TRANSPARENT
+        @Suppress("DEPRECATION")
+        window.navigationBarColor = AndroidColor.TRANSPARENT
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            window.attributes = window.attributes.apply {
+                layoutInDisplayCutoutMode =
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            }
+        }
         // Keep system bars fully transparent: without this the OS draws dark
         // contrast scrims over the status/nav bars (visible as black bands).
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -103,16 +123,17 @@ class MainActivity : ComponentActivity() {
 /**
  * Keeps status/navigation bar icons readable over the transparent
  * edge-to-edge bars for the currently selected [ThemeMode].
- * Dark themes (incl. AMOLED) need light icons; LIGHT needs dark icons.
+ * Dark theme needs light icons; LIGHT needs dark icons.
  */
 @Composable
 private fun EdgeToEdgeBarIcons(themeMode: ThemeMode) {
     val view = LocalView.current
     val systemDark = isSystemInDarkTheme()
+    val background = MaterialTheme.colorScheme.background
     val useDarkIcons = when (themeMode) {
         ThemeMode.LIGHT -> true
         ThemeMode.SYSTEM -> !systemDark
-        ThemeMode.DARK, ThemeMode.AMOLED -> false
+        ThemeMode.DARK -> false
     }
     SideEffect {
         val window = (view.context as? Activity)?.window ?: return@SideEffect
@@ -120,5 +141,8 @@ private fun EdgeToEdgeBarIcons(themeMode: ThemeMode) {
             isAppearanceLightStatusBars = useDarkIcons
             isAppearanceLightNavigationBars = useDarkIcons
         }
+        // Paint the window itself with the theme background so any pixel
+        // outside the Compose tree blends in instead of defaulting to black.
+        window.setBackgroundDrawable(ColorDrawable(background.toArgb()))
     }
 }

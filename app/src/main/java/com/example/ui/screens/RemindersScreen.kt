@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.HabitReminder
 import com.example.ui.theme.BrandPrimary
+import com.example.ui.theme.LocalAppChrome
 import com.example.ui.viewmodel.AppScreen
 import com.example.ui.viewmodel.HabitViewModel
 import java.util.Locale
@@ -115,7 +116,7 @@ fun RemindersScreen(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF1E212A))
+                        .background(LocalAppChrome.current.container)
                         .testTag("reminders_back_button")
                 ) {
                     Icon(
@@ -195,11 +196,11 @@ fun RemindersScreen(
                                             .size(width = 40.dp, height = 36.dp)
                                             .clip(RoundedCornerShape(10.dp))
                                             .background(
-                                                if (isSelected) BrandPrimary else Color(0xFF1B1D25)
+                                                if (isSelected) BrandPrimary else LocalAppChrome.current.container
                                             )
                                             .border(
                                                 width = 1.dp,
-                                                color = if (isSelected) BrandPrimary else Color(0xFF282B36),
+                                                color = if (isSelected) BrandPrimary else LocalAppChrome.current.border,
                                                 shape = RoundedCornerShape(10.dp)
                                             )
                                             .clickable {
@@ -242,8 +243,8 @@ fun RemindersScreen(
                                     modifier = Modifier
                                         .weight(1f)
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(Color(0xFF191B22))
-                                        .border(1.dp, Color(0xFF262934), RoundedCornerShape(12.dp))
+                                        .background(LocalAppChrome.current.containerAlt)
+                                        .border(1.dp, MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
                                         .clickable {
                                             currentReminderToEdit = reminder
                                             selectedHour = reminder.hour
@@ -276,8 +277,8 @@ fun RemindersScreen(
                                     modifier = Modifier
                                         .size(42.dp)
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(Color(0xFF191B22))
-                                        .border(1.dp, Color(0xFF262934), RoundedCornerShape(12.dp))
+                                        .background(LocalAppChrome.current.containerAlt)
+                                        .border(1.dp, MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
                                 ) {
                                     Icon(
                                         imageVector = Icons.Filled.Delete,
@@ -365,7 +366,7 @@ fun RemindersScreen(
                                 modifier = Modifier
                                     .weight(1f)
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(if (isSelected) BrandPrimary else Color(0xFF1E212A))
+                                    .background(if (isSelected) BrandPrimary else LocalAppChrome.current.container)
                                     .clickable { selectedHour = h }
                                     .padding(vertical = 8.dp),
                                 contentAlignment = Alignment.Center
@@ -374,7 +375,7 @@ fun RemindersScreen(
                                     text = "$h:00",
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) Color.Black else Color.White
+                                    color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
@@ -396,7 +397,7 @@ fun RemindersScreen(
                                 modifier = Modifier
                                     .weight(1f)
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(if (isSelected) BrandPrimary else Color(0xFF1E212A))
+                                    .background(if (isSelected) BrandPrimary else LocalAppChrome.current.container)
                                     .clickable { selectedMinute = m }
                                     .padding(vertical = 8.dp),
                                 contentAlignment = Alignment.Center
@@ -405,7 +406,7 @@ fun RemindersScreen(
                                     text = String.format(Locale.US, ":%02d", m),
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) Color.Black else Color.White
+                                    color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
@@ -438,7 +439,7 @@ fun RemindersScreen(
                     Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
-            containerColor = Color(0xFF161820)
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 }

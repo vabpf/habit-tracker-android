@@ -65,6 +65,7 @@ import com.example.data.model.HabitLog
 import com.example.ui.components.MilestoneCelebrationDialog
 import com.example.ui.components.StreakFreezeBanner
 import com.example.ui.components.StreakFreezeVaultDialog
+import com.example.ui.theme.LocalAppChrome
 import com.example.ui.components.CompactHabitRow
 import com.example.ui.components.HabitActionButton
 import com.example.ui.components.HabitCard
@@ -146,7 +147,7 @@ fun DashboardScreen(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF1E212A))
+                        .background(LocalAppChrome.current.container)
                         .testTag("settings_button")
                 ) {
                     Icon(
@@ -168,7 +169,7 @@ fun DashboardScreen(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF1E212A))
+                            .background(LocalAppChrome.current.container)
                             .testTag("achievements_button")
                     ) {
                         Icon(
@@ -185,7 +186,7 @@ fun DashboardScreen(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF1E212A))
+                            .background(LocalAppChrome.current.container)
                             .testTag("analytics_button")
                     ) {
                         Icon(
@@ -245,7 +246,7 @@ fun DashboardScreen(
                             )
                         },
                         colors = FilterChipDefaults.filterChipColors(
-                            containerColor = Color(0xFF161820),
+                            containerColor = LocalAppChrome.current.chip,
                             labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             selectedContainerColor = BrandPrimary,
                             selectedLabelColor = Color.Black
@@ -253,7 +254,7 @@ fun DashboardScreen(
                         border = FilterChipDefaults.filterChipBorder(
                             enabled = true,
                             selected = isSelected,
-                            borderColor = Color(0xFF282C38),
+                            borderColor = LocalAppChrome.current.border,
                             selectedBorderColor = BrandPrimary
                         )
                     )
@@ -367,7 +368,7 @@ fun DashboardScreen(
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(Color(0xFF1E212A))
+                                        .background(LocalAppChrome.current.container)
                                         .padding(horizontal = 12.dp, vertical = 6.dp)
                                 ) {
                                     Text(
@@ -621,7 +622,7 @@ fun DashboardScreen(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(RoundedCornerShape(20.dp))
-                        .background(if (isClassic) Color(0xFF3A3F4E) else Color.Transparent)
+                        .background(if (isClassic) LocalAppChrome.current.selectedNeutral else Color.Transparent)
                         .clickable { viewModel.setViewMode(DashboardViewMode.CLASSIC) }
                         .testTag("view_mode_classic"),
                     contentAlignment = Alignment.Center
@@ -629,7 +630,7 @@ fun DashboardScreen(
                     Icon(
                         imageVector = Icons.Filled.GridView,
                         contentDescription = "Classic View",
-                        tint = if (isClassic) Color.White else Color(0xFF8E93A3),
+                        tint = if (isClassic) MaterialTheme.colorScheme.onSurface else LocalAppChrome.current.muted,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -640,7 +641,7 @@ fun DashboardScreen(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(RoundedCornerShape(20.dp))
-                        .background(if (isCompact) Color(0xFF3A3F4E) else Color.Transparent)
+                        .background(if (isCompact) LocalAppChrome.current.selectedNeutral else Color.Transparent)
                         .clickable { viewModel.setViewMode(DashboardViewMode.COMPACT) }
                         .testTag("view_mode_compact"),
                     contentAlignment = Alignment.Center
@@ -648,7 +649,7 @@ fun DashboardScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.List,
                         contentDescription = "Compact View",
-                        tint = if (isCompact) Color.White else Color(0xFF8E93A3),
+                        tint = if (isCompact) MaterialTheme.colorScheme.onSurface else LocalAppChrome.current.muted,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -659,7 +660,7 @@ fun DashboardScreen(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(RoundedCornerShape(20.dp))
-                        .background(if (isSplit) Color(0xFF3A3F4E) else Color.Transparent)
+                        .background(if (isSplit) LocalAppChrome.current.selectedNeutral else Color.Transparent)
                         .clickable { viewModel.setViewMode(DashboardViewMode.SPLIT) }
                         .testTag("view_mode_split"),
                     contentAlignment = Alignment.Center
@@ -667,7 +668,7 @@ fun DashboardScreen(
                     Icon(
                         imageVector = Icons.Filled.ViewAgenda,
                         contentDescription = "Split View",
-                        tint = if (isSplit) Color.White else Color(0xFF8E93A3),
+                        tint = if (isSplit) MaterialTheme.colorScheme.onSurface else LocalAppChrome.current.muted,
                         modifier = Modifier.size(20.dp)
                     )
                 }

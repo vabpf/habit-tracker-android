@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import com.example.ui.theme.LocalAppChrome
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -108,7 +109,7 @@ fun MonthlyCompletionChart(
                     for (i in 0..3) {
                         val gridY = height * (i / 3f)
                         drawLine(
-                            color = Color(0xFF232631),
+                            color = LocalAppChrome.current.border,
                             start = Offset(0f, gridY),
                             end = Offset(width, gridY),
                             strokeWidth = 1.dp.toPx()
@@ -174,7 +175,7 @@ fun MonthlyCompletionChart(
                                 center = pt
                             )
                             drawCircle(
-                                color = Color(0xFF16181F),
+                                color = MaterialTheme.colorScheme.surface,
                                 radius = 2.dp.toPx(),
                                 center = pt
                             )

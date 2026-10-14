@@ -134,7 +134,7 @@ fun MilestoneCelebrationDialog(
                 )
             }
         },
-        containerColor = Color(0xFF1E212B),
+        containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(24.dp)
     )
 }
