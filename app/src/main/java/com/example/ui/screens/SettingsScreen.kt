@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -24,9 +24,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DesktopWindows
+import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Widgets
@@ -53,6 +58,9 @@ import com.example.ui.components.ContributionGrid
 import com.example.ui.components.HabitIconCatalog
 import com.example.ui.theme.LocalAppChrome
 import com.example.ui.theme.BrandPrimary
+import com.example.ui.theme.HabitAmber
+import com.example.ui.theme.HabitCoral
+import com.example.ui.theme.HabitSky
 import com.example.ui.theme.ThemeMode
 import com.example.ui.viewmodel.AppScreen
 import com.example.ui.viewmodel.HabitViewModel
@@ -81,9 +89,15 @@ fun SettingsScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                .statusBarsPadding(),
+            // Content flows behind the transparent nav bar (no dead band);
+            // bottom padding keeps the last item clear of the gesture pill.
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = 8.dp,
+                bottom = 96.dp
+            ),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Header
@@ -158,7 +172,7 @@ fun SettingsScreen(
                                     )
                                 )
                                 Text(
-                                    text = "Dark, light, or follow the system",
+                                    text = "Choose how the app looks on your device.",
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -169,43 +183,82 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         val modes = listOf(
-                            ThemeMode.DARK to "Dark Slate",
-                            ThemeMode.LIGHT to "Light",
-                            ThemeMode.SYSTEM to "System"
+                            Triple(ThemeMode.DARK, "Dark Slate", Icons.Filled.DarkMode to BrandPrimary),
+                            Triple(ThemeMode.LIGHT, "Light", Icons.Filled.LightMode to HabitAmber),
+                            Triple(ThemeMode.SYSTEM, "System", Icons.Filled.DesktopWindows to HabitSky)
                         )
 
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            modes.forEach { (mode, label) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            modes.forEach { (mode, label, iconAndTint) ->
+                                val (icon, tint) = iconAndTint
                                 val isSelected = currentTheme == mode
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(if (isSelected) MaterialTheme.colorScheme.surfaceVariant else LocalAppChrome.current.containerAlt)
-                                        .border(
-                                            1.dp,
-                                            if (isSelected) BrandPrimary else LocalAppChrome.current.border,
-                                            RoundedCornerShape(12.dp)
-                                        )
-                                        .clickable { viewModel.setThemeMode(mode) }
-                                        .padding(horizontal = 14.dp, vertical = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                                Box(
+                                    modifier = Modifier.weight(1f),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Text(
-                                        text = label,
-                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(16.dp))
+                                            .background(
+                                                if (isSelected) BrandPrimary.copy(alpha = 0.10f)
+                                                else Color.Transparent
+                                            )
+                                            .border(
+                                                width = if (isSelected) 2.dp else 1.dp,
+                                                color = if (isSelected) BrandPrimary
+                                                else LocalAppChrome.current.border,
+                                                shape = RoundedCornerShape(16.dp)
+                                            )
+                                            .clickable { viewModel.setThemeMode(mode) }
+                                            .padding(vertical = 14.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(44.dp)
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .background(tint.copy(alpha = 0.16f)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = icon,
+                                                contentDescription = null,
+                                                tint = tint,
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = label,
+                                            style = MaterialTheme.typography.labelMedium.copy(
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                color = if (isSelected) MaterialTheme.colorScheme.onSurface
+                                                else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
                                         )
-                                    )
+                                    }
                                     if (isSelected) {
                                         Box(
                                             modifier = Modifier
-                                                .size(10.dp)
+                                                .align(Alignment.TopEnd)
+                                                .offset(x = 6.dp, y = (-6).dp)
+                                                .size(22.dp)
                                                 .clip(CircleShape)
                                                 .background(BrandPrimary)
-                                        )
+                                                .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Filled.Check,
+                                                contentDescription = null,
+                                                tint = Color.Black,
+                                                modifier = Modifier.size(13.dp)
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -252,7 +305,7 @@ fun SettingsScreen(
                                     )
                                 )
                                 Text(
-                                    text = "Keep your habit grids in sight on your home screen",
+                                    text = "Keep your habit grids in sight on your home screen.",
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -298,12 +351,36 @@ fun SettingsScreen(
                                             )
                                         )
                                         Spacer(modifier = Modifier.weight(1f))
-                                        Text(
-                                            text = "Widget Preview",
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                color = LocalAppChrome.current.muted
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier
+                                                .clip(CircleShape)
+                                                .border(
+                                                    1.dp,
+                                                    LocalAppChrome.current.border,
+                                                    CircleShape
+                                                )
+                                                .clickable {
+                                                    viewModel.navigateTo(
+                                                        AppScreen.NOTES,
+                                                        featuredHabit.id
+                                                    )
+                                                }
+                                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                                        ) {
+                                            Text(
+                                                text = "Widget Preview",
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
                                             )
-                                        )
+                                            Icon(
+                                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.size(14.dp)
+                                            )
+                                        }
                                     }
                                     Spacer(modifier = Modifier.height(10.dp))
                                     ContributionGrid(
@@ -361,13 +438,36 @@ fun SettingsScreen(
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        Text(
-                            text = "No account. No sign-up. No ads. Your habit data stays securely on your device, and the app works completely offline.",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                lineHeight = 21.sp
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "No account. No sign-up. No ads. Your habit data stays securely on your device, and the app works completely offline.",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    lineHeight = 21.sp
+                                ),
+                                modifier = Modifier.weight(1f)
                             )
-                        )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(84.dp)
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .background(HabitSky.copy(alpha = 0.16f))
+                                    .border(
+                                        1.dp,
+                                        HabitSky.copy(alpha = 0.35f),
+                                        RoundedCornerShape(24.dp)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Shield,
+                                    contentDescription = null,
+                                    tint = HabitSky,
+                                    modifier = Modifier.size(44.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -385,19 +485,38 @@ fun SettingsScreen(
                             .fillMaxWidth()
                             .padding(18.dp)
                     ) {
-                        Text(
-                            text = "Room Database Management",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        )
-                        Text(
-                            text = "Manage local SQLite persistent data on this device",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(HabitCoral.copy(alpha = 0.16f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Storage,
+                                    contentDescription = null,
+                                    tint = HabitCoral,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "Room Database Management",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                )
+                                Text(
+                                    text = "Manage local SQLite persistent data on this device.",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                )
+                            }
+                        }
 
                         Spacer(modifier = Modifier.height(14.dp))
 
@@ -413,10 +532,24 @@ fun SettingsScreen(
                                     Toast.makeText(context, "Room database cleared! Starting blank.", Toast.LENGTH_SHORT).show()
                                 }
                                 .padding(horizontal = 14.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(HabitCoral.copy(alpha = 0.16f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Delete,
+                                    contentDescription = null,
+                                    tint = HabitCoral,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "Clear All Data (Start Blank)",
                                     style = MaterialTheme.typography.bodyMedium.copy(
@@ -425,145 +558,17 @@ fun SettingsScreen(
                                     )
                                 )
                                 Text(
-                                    text = "Deletes all stored habits, logs, and notes",
+                                    text = "Deletes all stored habits, logs, and notes.",
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         color = LocalAppChrome.current.dangerSubText
                                     )
                                 )
                             }
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Reload Demo Habits Button
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(LocalAppChrome.current.infoContainer)
-                                .border(1.dp, LocalAppChrome.current.infoBorder, RoundedCornerShape(12.dp))
-                                .clickable {
-                                    viewModel.reloadSampleData()
-                                    Toast.makeText(context, "Demo habits & contribution grids reloaded!", Toast.LENGTH_SHORT).show()
-                                }
-                                .padding(horizontal = 14.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text(
-                                    text = "Reload Demo Habits",
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = LocalAppChrome.current.infoText
-                                    )
-                                )
-                                Text(
-                                    text = "Restores sample habits matching design screenshots",
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        color = LocalAppChrome.current.infoSubText
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Data Export / Backup
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            Toast.makeText(context, "Local backup exported successfully!", Toast.LENGTH_SHORT).show()
-                        },
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    border = CardDefaults.outlinedCardBorder()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(34.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(LocalAppChrome.current.container),
-                            contentAlignment = Alignment.Center
-                        ) {
                             Icon(
-                                imageVector = Icons.Filled.FileDownload,
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Export Habit Data",
-                                style = MaterialTheme.typography.titleSmall.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            )
-                            Text(
-                                text = "Save a JSON backup of your habits and logs",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-
-            // About Card
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    border = CardDefaults.outlinedCardBorder()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(34.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(LocalAppChrome.current.container),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Info,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = "Habit Tracker v1.0",
-                                style = MaterialTheme.typography.titleSmall.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            )
-                            Text(
-                                text = "Consistency made rewarding with beautiful grids",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                tint = LocalAppChrome.current.dangerText,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }

@@ -41,7 +41,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -70,6 +69,7 @@ import com.example.ui.components.CompactHabitRow
 import com.example.ui.components.HabitActionButton
 import com.example.ui.components.HabitCard
 import com.example.ui.components.HabitIconCatalog
+import com.example.ui.components.SwipeableHabitItem
 import com.example.ui.util.LocalBackdrop
 import com.example.ui.util.glassEffect
 import com.example.ui.util.softDropShadow
@@ -142,21 +142,12 @@ fun DashboardScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 // Settings Icon (Left)
-                IconButton(
+                CircleIconButton(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = "Settings",
                     onClick = { viewModel.navigateTo(AppScreen.SETTINGS) },
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(LocalAppChrome.current.container)
-                        .testTag("settings_button")
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Settings,
-                        contentDescription = "Settings",
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+                    testTag = "settings_button"
+                )
 
                 // Right actions: Achievements + Analytics + Add Habit
                 Row(
@@ -164,55 +155,32 @@ fun DashboardScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Achievements Trophy Button
-                    IconButton(
+                    CircleIconButton(
+                        imageVector = Icons.Filled.EmojiEvents,
+                        contentDescription = "Achievements",
                         onClick = { viewModel.navigateTo(AppScreen.BADGES) },
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(LocalAppChrome.current.container)
-                            .testTag("achievements_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.EmojiEvents,
-                            contentDescription = "Achievements",
-                            tint = Color(0xFFFFD54F),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
+                        contentColor = Color(0xFFFFD54F),
+                        testTag = "achievements_button"
+                    )
 
                     // Analytics Button
-                    IconButton(
+                    CircleIconButton(
+                        imageVector = Icons.Filled.Analytics,
+                        contentDescription = "Statistics",
                         onClick = { viewModel.navigateTo(AppScreen.ANALYTICS) },
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(LocalAppChrome.current.container)
-                            .testTag("analytics_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Analytics,
-                            contentDescription = "Statistics",
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
+                        testTag = "analytics_button"
+                    )
 
                     // Add Habit Button (Purple circle with plus)
-                    IconButton(
+                    CircleIconButton(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Add Habit",
                         onClick = { viewModel.startCreateHabit() },
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(BrandPrimary)
-                            .testTag("add_habit_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = "Add Habit",
-                            tint = Color.Black,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
+                        containerColor = BrandPrimary,
+                        contentColor = Color.Black,
+                        iconSize = 22.dp,
+                        testTag = "add_habit_button"
+                    )
                 }
             }
 
@@ -245,6 +213,7 @@ fun DashboardScreen(
                                 )
                             )
                         },
+                        shape = CircleShape,
                         colors = FilterChipDefaults.filterChipColors(
                             containerColor = LocalAppChrome.current.chip,
                             labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -335,17 +304,27 @@ fun DashboardScreen(
                                 val habitLogs = logsByHabit[habit.id] ?: emptyList()
                                 val todayLog = habitLogs.firstOrNull { it.date == todayStr }
 
-                                HabitCard(
-                                    habit = habit,
-                                    logs = habitLogs,
-                                    todayLog = todayLog,
-                                    onCardClick = {
-                                        viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
-                                    },
-                                    onActionClick = {
+                                SwipeableHabitItem(
+                                    onToggleToday = {
                                         viewModel.toggleHabitDay(habit, today)
-                                    }
-                                )
+                                    },
+                                    onArchiveToggle = {
+                                        viewModel.toggleArchiveHabit(habit)
+                                    },
+                                    isArchived = habit.isArchived
+                                ) {
+                                    HabitCard(
+                                        habit = habit,
+                                        logs = habitLogs,
+                                        todayLog = todayLog,
+                                        onCardClick = {
+                                            viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
+                                        },
+                                        onActionClick = {
+                                            viewModel.toggleHabitDay(habit, today)
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -453,17 +432,28 @@ fun DashboardScreen(
                                     val habitLogs = logsByHabit[habit.id] ?: emptyList()
                                     val logsMap = habitLogs.associateBy { it.date }
 
-                                    CompactHabitRow(
-                                        habit = habit,
-                                        days = last5Days,
-                                        logsMap = logsMap,
-                                        onDayClick = { clickedDate ->
-                                            viewModel.toggleHabitDay(habit, clickedDate)
+                                    SwipeableHabitItem(
+                                        onToggleToday = {
+                                            viewModel.toggleHabitDay(habit, today)
                                         },
-                                        onRowClick = {
-                                            viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
-                                        }
-                                    )
+                                        onArchiveToggle = {
+                                            viewModel.toggleArchiveHabit(habit)
+                                        },
+                                        isArchived = habit.isArchived,
+                                        backgroundShape = RoundedCornerShape(16.dp)
+                                    ) {
+                                        CompactHabitRow(
+                                            habit = habit,
+                                            days = last5Days,
+                                            logsMap = logsMap,
+                                            onDayClick = { clickedDate ->
+                                                viewModel.toggleHabitDay(habit, clickedDate)
+                                            },
+                                            onRowClick = {
+                                                viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -487,12 +477,22 @@ fun DashboardScreen(
                                 val stats = viewModel.calculateStats(habit, habitLogs)
                                 val habitColor = Color(habit.colorHex)
 
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
-                                        },
+                                SwipeableHabitItem(
+                                    onToggleToday = {
+                                        viewModel.toggleHabitDay(habit, today)
+                                    },
+                                    onArchiveToggle = {
+                                        viewModel.toggleArchiveHabit(habit)
+                                    },
+                                    isArchived = habit.isArchived,
+                                    backgroundShape = RoundedCornerShape(18.dp)
+                                ) {
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
+                                            },
                                     shape = RoundedCornerShape(18.dp),
                                     colors = CardDefaults.cardColors(
                                         containerColor = MaterialTheme.colorScheme.surface
@@ -563,7 +563,7 @@ fun DashboardScreen(
                                             }
                                         )
                                     }
-                                }
+                                    }
                             }
                         }
                     }

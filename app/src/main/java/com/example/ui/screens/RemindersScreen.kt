@@ -103,7 +103,6 @@ fun RemindersScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .navigationBarsPadding()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             // Header
@@ -194,14 +193,14 @@ fun RemindersScreen(
                                     Box(
                                         modifier = Modifier
                                             .size(width = 40.dp, height = 36.dp)
-                                            .clip(RoundedCornerShape(10.dp))
+                                            .clip(CircleShape)
                                             .background(
                                                 if (isSelected) BrandPrimary else LocalAppChrome.current.container
                                             )
                                             .border(
                                                 width = 1.dp,
                                                 color = if (isSelected) BrandPrimary else LocalAppChrome.current.border,
-                                                shape = RoundedCornerShape(10.dp)
+                                                shape = CircleShape
                                             )
                                             .clickable {
                                                 val newSet = if (isSelected) activeDays - dayNum else activeDays + dayNum
@@ -304,6 +303,8 @@ fun RemindersScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .padding(bottom = 16.dp)
                         .height(52.dp)
                         .testTag("add_reminder_button"),
                     shape = RoundedCornerShape(16.dp),
@@ -365,7 +366,7 @@ fun RemindersScreen(
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(CircleShape)
                                     .background(if (isSelected) BrandPrimary else LocalAppChrome.current.container)
                                     .clickable { selectedHour = h }
                                     .padding(vertical = 8.dp),
@@ -396,7 +397,7 @@ fun RemindersScreen(
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(CircleShape)
                                     .background(if (isSelected) BrandPrimary else LocalAppChrome.current.container)
                                     .clickable { selectedMinute = m }
                                     .padding(vertical = 8.dp),

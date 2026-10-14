@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -113,9 +112,16 @@ fun AnalyticsScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                .statusBarsPadding(),
+            // No container-level navigationBarsPadding: content flows behind
+            // the transparent nav bar (like Dashboard) instead of leaving a
+            // dead band. Bottom content padding keeps the last item clear.
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = 8.dp,
+                bottom = 96.dp
+            ),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Top Habit Switcher Bar + Done Button (Screenshot 4)
@@ -284,11 +290,12 @@ fun AnalyticsScreen(
                         showLabels = true,
                         tileHeight = 9.dp,
                         // Follow the year picker: show the window ending at
-                        // Dec 31 of the selected year (or today for the
-                        // current/future years).
+                        // Dec 31 of the selected year. Past years show that
+                        // year's data; the current year ends today; future
+                        // years render all-future (empty) grids.
                         endDate = remember(selectedYear) {
                             val now = LocalDate.now()
-                            if (selectedYear >= now.year) now
+                            if (selectedYear == now.year) now
                             else LocalDate.of(selectedYear, 12, 31)
                         },
                         modifier = Modifier

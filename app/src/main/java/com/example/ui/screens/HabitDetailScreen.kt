@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -124,9 +123,15 @@ fun HabitDetailScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                .statusBarsPadding(),
+            // Content flows behind the transparent nav bar (no dead band);
+            // bottom padding keeps the last item clear of the gesture pill.
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = 8.dp,
+                bottom = 96.dp
+            ),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Top App Bar
@@ -136,90 +141,49 @@ fun HabitDetailScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
+                    CircleIconButton(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
                         onClick = { viewModel.navigateTo(AppScreen.DASHBOARD) },
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(LocalAppChrome.current.container)
-                            .testTag("detail_back_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
+                        testTag = "detail_back_button"
+                    )
 
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         // Reminders button
-                        IconButton(
+                        CircleIconButton(
+                            imageVector = Icons.Filled.NotificationsActive,
+                            contentDescription = "Reminders",
                             onClick = { viewModel.navigateTo(AppScreen.REMINDERS, habit.id) },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(LocalAppChrome.current.container)
-                                .testTag("reminders_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.NotificationsActive,
-                                contentDescription = "Reminders",
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
+                            iconSize = 18.dp,
+                            testTag = "reminders_button"
+                        )
 
                         // Notes button
-                        IconButton(
+                        CircleIconButton(
+                            imageVector = Icons.Filled.EditNote,
+                            contentDescription = "Notes",
                             onClick = { viewModel.navigateTo(AppScreen.NOTES, habit.id) },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(LocalAppChrome.current.container)
-                                .testTag("notes_screen_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.EditNote,
-                                contentDescription = "Notes",
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                            testTag = "notes_screen_button"
+                        )
 
                         // Archive / Restore button
-                        IconButton(
+                        CircleIconButton(
+                            imageVector = if (habit.isArchived) Icons.Filled.Unarchive else Icons.Filled.Archive,
+                            contentDescription = if (habit.isArchived) "Restore Habit" else "Archive Habit",
                             onClick = { viewModel.toggleArchiveHabit(habit) },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(LocalAppChrome.current.container)
-                                .testTag("archive_habit_button")
-                        ) {
-                            Icon(
-                                imageVector = if (habit.isArchived) Icons.Filled.Unarchive else Icons.Filled.Archive,
-                                contentDescription = if (habit.isArchived) "Restore Habit" else "Archive Habit",
-                                tint = if (habit.isArchived) Color(0xFFFCC419) else MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
+                            iconSize = 18.dp,
+                            contentColor = if (habit.isArchived) Color(0xFFFCC419) else MaterialTheme.colorScheme.onSurface,
+                            testTag = "archive_habit_button"
+                        )
 
                         // Edit button
-                        IconButton(
+                        CircleIconButton(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Edit Habit",
                             onClick = { viewModel.startEditHabit(habit) },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(LocalAppChrome.current.container)
-                                .testTag("edit_habit_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Edit,
-                                contentDescription = "Edit Habit",
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
+                            iconSize = 18.dp,
+                            testTag = "edit_habit_button"
+                        )
                     }
                 }
             }

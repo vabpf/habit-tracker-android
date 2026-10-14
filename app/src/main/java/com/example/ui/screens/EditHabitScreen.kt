@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -130,9 +129,15 @@ fun EditHabitScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding(),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+                .statusBarsPadding(),
+            // Content flows behind the transparent nav bar (no dead band);
+            // bottom padding keeps the save button clear of the gesture pill.
+            contentPadding = PaddingValues(
+                start = 20.dp,
+                end = 20.dp,
+                top = 8.dp,
+                bottom = 96.dp
+            ),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
             // Top Bar: [X]  Edit Habit / New Habit
@@ -370,9 +375,9 @@ fun EditHabitScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
+                            .clip(CircleShape)
                             .background(LocalAppChrome.current.chip)
-                            .border(1.dp, LocalAppChrome.current.border, RoundedCornerShape(16.dp))
+                            .border(1.dp, LocalAppChrome.current.border, CircleShape)
                             .padding(4.dp)
                     ) {
                         // Build A Habit
@@ -380,7 +385,7 @@ fun EditHabitScreen(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(CircleShape)
                                 .background(if (isBuild) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent)
                                 .clickable { habitType = HabitType.BUILD }
                                 .padding(vertical = 10.dp)
@@ -401,7 +406,7 @@ fun EditHabitScreen(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(CircleShape)
                                 .background(if (isQuit) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent)
                                 .clickable { habitType = HabitType.QUIT }
                                 .padding(vertical = 10.dp)
@@ -445,9 +450,9 @@ fun EditHabitScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
+                            .clip(CircleShape)
                             .background(LocalAppChrome.current.chip)
-                            .border(1.dp, LocalAppChrome.current.border, RoundedCornerShape(16.dp))
+                            .border(1.dp, LocalAppChrome.current.border, CircleShape)
                             .padding(4.dp)
                     ) {
                         TrackingType.entries.forEach { t ->
@@ -460,7 +465,7 @@ fun EditHabitScreen(
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clip(RoundedCornerShape(12.dp))
+                                    .clip(CircleShape)
                                     .background(if (isSelected) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent)
                                     .clickable { trackingType = t }
                                     .padding(vertical = 10.dp)
@@ -545,9 +550,9 @@ fun EditHabitScreen(
                             val isSelected = category == cat
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(12.dp))
+                                    .clip(CircleShape)
                                     .background(if (isSelected) currentColor.copy(alpha = 0.2f) else LocalAppChrome.current.chip)
-                                    .border(1.dp, if (isSelected) currentColor else LocalAppChrome.current.border, RoundedCornerShape(12.dp))
+                                    .border(1.dp, if (isSelected) currentColor else LocalAppChrome.current.border, CircleShape)
                                     .clickable { category = cat }
                                     .padding(horizontal = 14.dp, vertical = 8.dp)
                             ) {
