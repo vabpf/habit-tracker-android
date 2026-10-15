@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.animateEnterExit
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.lazy.items
@@ -344,24 +345,22 @@ fun DashboardScreen(
                                 val habitLogs = logsByHabit[habit.id] ?: emptyList()
                                 val todayLog = habitLogs.firstOrNull { it.date == todayStr }
 
-                                AnimatedVisibility(
-                                    visible = true,
-                                    enter = fadeIn() + slideInVertically(
-                                        initialOffsetY = { it / 3 }
-                                    ),
-                                ) {
-                                    HabitCard(
-                                        habit = habit,
-                                        logs = habitLogs,
-                                        todayLog = todayLog,
-                                        onCardClick = {
-                                            viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
-                                        },
-                                        onActionClick = {
-                                            viewModel.toggleHabitDay(habit, today)
-                                        }
+                                HabitCard(
+                                    habit = habit,
+                                    logs = habitLogs,
+                                    todayLog = todayLog,
+                                    onCardClick = {
+                                        viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
+                                    },
+                                    onActionClick = {
+                                        viewModel.toggleHabitDay(habit, today)
+                                    },
+                                    modifier = Modifier.animateEnterExit(
+                                        enter = fadeIn() + slideInVertically(
+                                            initialOffsetY = { it / 3 }
+                                        )
                                     )
-                                }
+                                )
                             }
                         }
                     }
@@ -510,18 +509,17 @@ fun DashboardScreen(
                                 val stats = viewModel.calculateStats(habit, habitLogs)
                                 val habitColor = Color(habit.colorHex)
 
-                                AnimatedVisibility(
-                                    visible = true,
-                                    enter = fadeIn() + slideInVertically(
-                                        initialOffsetY = { it / 3 }
-                                    ),
-                                ) {
-                                    Card(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable {
-                                                viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
-                                            },
+                                Card(
+                                    modifier = Modifier
+                                        .animateEnterExit(
+                                            enter = fadeIn() + slideInVertically(
+                                                initialOffsetY = { it / 3 }
+                                            )
+                                        )
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
+                                        },
                                     shape = RoundedCornerShape(18.dp),
                                     colors = CardDefaults.cardColors(
                                         containerColor = MaterialTheme.colorScheme.surface
@@ -592,7 +590,6 @@ fun DashboardScreen(
                                             }
                                         )
                                     }
-                                }
                                 }
                             }
                         }
