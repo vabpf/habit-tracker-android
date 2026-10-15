@@ -76,6 +76,7 @@ import com.example.ui.components.CompactHabitRow
 import com.example.ui.components.HabitActionButton
 import com.example.ui.components.HabitCard
 import com.example.ui.components.HabitIconCatalog
+import com.example.ui.components.listItemEnter
 import com.example.ui.util.LocalBackdrop
 import com.example.ui.util.glassEffect
 import com.example.ui.util.softDropShadow
