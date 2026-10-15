@@ -70,7 +70,9 @@ object WidgetGlassBackground {
             val cy = (dh - cropH) / 2
 
             // Draw the crop tiny — upscaling with filtering IS the blur.
-            val smallW = 160
+            // Kept very small so wallpaper shapes melt into frost and the
+            // unavoidable crop/position mismatch stays invisible.
+            val smallW = 96
             val smallH = (smallW / targetAspect).toInt().coerceAtLeast(1)
             val small = Bitmap.createBitmap(smallW, smallH, Bitmap.Config.ARGB_8888)
             val smallCanvas = Canvas(small)

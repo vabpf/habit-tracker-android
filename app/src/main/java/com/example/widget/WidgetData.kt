@@ -196,7 +196,9 @@ object WidgetData {
                 val isFuture = cellDate.isAfter(today)
 
                 bgPaint.color = inactiveColor
-                bgPaint.alpha = if (isFuture) 77 else 255
+                // Translucent so the frosted card shows through instead of
+                // punching opaque black holes in the glass.
+                bgPaint.alpha = if (isFuture) 50 else 100
                 canvas.drawRoundRect(rect, radius, radius, bgPaint)
 
                 val loggedValue = logMap[cellDate.format(formatter)]
