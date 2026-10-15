@@ -349,7 +349,6 @@ fun DashboardScreen(
                                     enter = fadeIn() + slideInVertically(
                                         initialOffsetY = { it / 3 }
                                     ),
-                                    label = "habit_card_enter"
                                 ) {
                                     HabitCard(
                                         habit = habit,
@@ -475,7 +474,6 @@ fun DashboardScreen(
                                         enter = fadeIn() + slideInVertically(
                                             initialOffsetY = { it / 3 }
                                         ),
-                                        label = "habit_row_enter"
                                     ) {
                                         CompactHabitRow(
                                             habit = habit,
@@ -517,7 +515,6 @@ fun DashboardScreen(
                                     enter = fadeIn() + slideInVertically(
                                         initialOffsetY = { it / 3 }
                                     ),
-                                    label = "habit_split_enter"
                                 ) {
                                     Card(
                                         modifier = Modifier

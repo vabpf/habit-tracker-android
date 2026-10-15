@@ -174,7 +174,6 @@ fun ArchivedScreen(
                             androidx.compose.animation.slideInVertically(
                                 initialOffsetY = { it / 3 }
                             ),
-                        label = "archived_row_enter"
                     ) {
                         ArchivedHabitRow(
                             habit = habit,

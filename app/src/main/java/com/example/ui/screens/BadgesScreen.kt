@@ -179,7 +179,6 @@ fun BadgesScreen(
                             androidx.compose.animation.slideInVertically(
                                 initialOffsetY = { it / 3 }
                             ),
-                        label = "badge_enter"
                     ) {
                         BadgeCard(badge = badge)
                     }
