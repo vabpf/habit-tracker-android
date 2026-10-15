@@ -33,6 +33,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.screens.AnalyticsScreen
 import com.example.ui.screens.ArchivedScreen
+import com.example.ui.screens.WidgetsScreen
 import com.example.ui.screens.DashboardScreen
 import com.example.ui.screens.EditHabitScreen
 import com.example.ui.screens.HabitDetailScreen
@@ -151,6 +152,9 @@ class MainActivity : ComponentActivity() {
                             }
                             AppScreen.ARCHIVED -> {
                                 ArchivedScreen(viewModel = viewModel)
+                            }
+                            AppScreen.WIDGETS -> {
+                                WidgetsScreen(viewModel = viewModel)
                             }
                         }
                     }

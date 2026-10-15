@@ -106,7 +106,10 @@ class HabitGridWidgetProvider : AppWidgetProvider() {
     }
 
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
-        appWidgetIds.forEach { WidgetData.removeGridPrefs(context, it) }
+        appWidgetIds.forEach {
+            WidgetData.removeGridPrefs(context, it)
+            WidgetAppearanceStore.remove(context, it)
+        }
     }
 
     private suspend fun renderViews(
@@ -115,6 +118,17 @@ class HabitGridWidgetProvider : AppWidgetProvider() {
         appWidgetId: Int
     ): RemoteViews? {
         val views = RemoteViews(context.packageName, R.layout.widget_habit_grid)
+
+        // Per-widget card background (hidden when disabled in settings).
+        val cardBg = WidgetCardBackground.render(
+            WidgetAppearanceStore.load(context, appWidgetId)
+        )
+        if (cardBg != null) {
+            views.setViewVisibility(R.id.widget_card_bg, View.VISIBLE)
+            views.setImageViewBitmap(R.id.widget_card_bg, cardBg)
+        } else {
+            views.setViewVisibility(R.id.widget_card_bg, View.GONE)
+        }
 
         val appIntent = Intent(context, MainActivity::class.java)
         val appPendingIntent = PendingIntent.getActivity(

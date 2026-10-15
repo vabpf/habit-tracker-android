@@ -1,11 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_grid_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/widget_glass_background"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="@android:color/transparent">
+
+    <!-- Per-widget card background (color × opacity), hidden when off -->
+    <ImageView
+        android:id="@+id/widget_card_bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:contentDescription="@null"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp">
 
     <!-- Header: color dot + name + streak + today toggle -->
     <LinearLayout
@@ -85,4 +98,5 @@
         android:textSize="12sp"
         android:visibility="gone" />
 
-</LinearLayout>
+    </LinearLayout>
+</FrameLayout>

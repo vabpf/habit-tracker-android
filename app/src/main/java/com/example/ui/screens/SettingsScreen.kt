@@ -394,6 +394,42 @@ fun SettingsScreen(
                                 }
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Manage widgets entry
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(LocalAppChrome.current.containerAlt)
+                                .border(
+                                    1.dp,
+                                    LocalAppChrome.current.border,
+                                    RoundedCornerShape(14.dp)
+                                )
+                                .clickable {
+                                    viewModel.navigateTo(AppScreen.WIDGETS)
+                                }
+                                .padding(horizontal = 14.dp, vertical = 12.dp)
+                                .testTag("manage_widgets_row")
+                        ) {
+                            Text(
+                                text = "Manage widgets",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            )
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
             }

@@ -95,6 +95,10 @@ class HabitWidgetProvider : AppWidgetProvider() {
         }
     }
 
+    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
+        appWidgetIds.forEach { WidgetAppearanceStore.remove(context, it) }
+    }
+
     private fun renderWidget(
         context: Context,
         appWidgetManager: AppWidgetManager,
@@ -104,6 +108,17 @@ class HabitWidgetProvider : AppWidgetProvider() {
         habitStreaks: Map<Long, Int>
     ) {
         val views = RemoteViews(context.packageName, R.layout.widget_habit_tracker)
+
+        // Per-widget card background (hidden when disabled in settings).
+        val cardBg = WidgetCardBackground.render(
+            WidgetAppearanceStore.load(context, appWidgetId)
+        )
+        if (cardBg != null) {
+            views.setViewVisibility(R.id.widget_card_bg, View.VISIBLE)
+            views.setImageViewBitmap(R.id.widget_card_bg, cardBg)
+        } else {
+            views.setViewVisibility(R.id.widget_card_bg, View.GONE)
+        }
 
         // Launch MainActivity when clicking the header or empty state
         val appIntent = Intent(context, MainActivity::class.java)

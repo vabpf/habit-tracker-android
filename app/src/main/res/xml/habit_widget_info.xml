@@ -11,5 +11,6 @@
     android:minResizeWidth="180dp"
     android:minResizeHeight="110dp"
     android:widgetCategory="home_screen"
+    android:configure="com.example.widget.HabitQuickWidgetConfigureActivity"
     android:description="@string/widget_description">
 </appwidget-provider>

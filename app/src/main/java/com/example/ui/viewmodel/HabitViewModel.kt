@@ -38,7 +38,8 @@ enum class AppScreen {
     EDIT_HABIT,
     SETTINGS,
     BADGES,
-    ARCHIVED
+    ARCHIVED,
+    WIDGETS
 }
 
 enum class DashboardViewMode {
