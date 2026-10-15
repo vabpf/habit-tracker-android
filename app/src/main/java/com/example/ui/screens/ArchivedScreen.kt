@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.animateItem
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -169,15 +168,23 @@ fun ArchivedScreen(
                 }
             } else {
                 items(archived, key = { it.id }) { habit ->
-                    ArchivedHabitRow(
-                        habit = habit,
-                        onRowClick = {
-                            viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
-                        },
-                        onUnarchive = { viewModel.toggleArchiveHabit(habit) },
-                        onDelete = { pendingDelete = habit },
-                        modifier = Modifier.animateItem()
-                    )
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = true,
+                        enter = androidx.compose.animation.fadeIn() +
+                            androidx.compose.animation.slideInVertically(
+                                initialOffsetY = { it / 3 }
+                            ),
+                        label = "archived_row_enter"
+                    ) {
+                        ArchivedHabitRow(
+                            habit = habit,
+                            onRowClick = {
+                                viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
+                            },
+                            onUnarchive = { viewModel.toggleArchiveHabit(habit) },
+                            onDelete = { pendingDelete = habit }
+                        )
+                    }
                 }
             }
         }

@@ -1,11 +1,7 @@
-@file:OptIn(androidx.compose.animation.ExperimentalSharedTransitionApi::class)
-
 package com.example.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
@@ -69,7 +65,6 @@ import com.example.data.model.TrackingType
 import com.example.ui.components.ContributionGrid
 import com.example.ui.components.CircleIconButton
 import com.example.ui.components.HabitIconCatalog
-import com.example.ui.components.habitIconTransition
 import com.example.ui.components.rememberShakeController
 import com.example.ui.components.shake
 import kotlinx.coroutines.launch
@@ -87,9 +82,7 @@ import java.time.format.DateTimeFormatter
 fun HabitDetailScreen(
     habitId: Long,
     viewModel: HabitViewModel,
-    modifier: Modifier = Modifier,
-    sharedScope: SharedTransitionScope? = null,
-    animatedScope: AnimatedVisibilityScope? = null
+    modifier: Modifier = Modifier
 ) {
     BackHandler {
         viewModel.navigateTo(AppScreen.DASHBOARD)
@@ -225,7 +218,6 @@ fun HabitDetailScreen(
                 ) {
                     Box(
                         modifier = Modifier
-                            .habitIconTransition(habit.id, sharedScope, animatedScope)
                             .size(52.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(habitColor.copy(alpha = 0.16f))

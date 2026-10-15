@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.animateItem
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -174,7 +173,14 @@ fun BadgesScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(badges, key = { it.id }) { badge ->
-                    Box(modifier = Modifier.animateItem()) {
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = true,
+                        enter = androidx.compose.animation.fadeIn() +
+                            androidx.compose.animation.slideInVertically(
+                                initialOffsetY = { it / 3 }
+                            ),
+                        label = "badge_enter"
+                    ) {
                         BadgeCard(badge = badge)
                     }
                 }

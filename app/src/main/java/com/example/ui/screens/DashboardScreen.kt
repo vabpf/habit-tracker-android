@@ -1,12 +1,9 @@
-@file:OptIn(androidx.compose.animation.ExperimentalSharedTransitionApi::class)
-
 package com.example.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,7 +23,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.animateItem
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.lazy.items
@@ -80,7 +76,6 @@ import com.example.ui.components.CompactHabitRow
 import com.example.ui.components.HabitActionButton
 import com.example.ui.components.HabitCard
 import com.example.ui.components.HabitIconCatalog
-import com.example.ui.components.habitIconTransition
 import com.example.ui.util.LocalBackdrop
 import com.example.ui.util.glassEffect
 import com.example.ui.util.softDropShadow
@@ -98,9 +93,7 @@ import java.util.Locale
 @Composable
 fun DashboardScreen(
     viewModel: HabitViewModel,
-    modifier: Modifier = Modifier,
-    sharedScope: SharedTransitionScope? = null,
-    animatedScope: AnimatedVisibilityScope? = null
+    modifier: Modifier = Modifier
 ) {
     val habits by viewModel.filteredHabits.collectAsState()
     val allLogs by viewModel.allLogs.collectAsState()
@@ -334,12 +327,7 @@ fun DashboardScreen(
                             state = pagerState,
                             modifier = Modifier.fillMaxSize()
                         ) { page ->
-                            val pageMode = DashboardViewMode.entries[page]
-                            // Only the visible page participates in hero morphs —
-                            // offscreen pages hold duplicate keys.
-                            val activeScope = if (pageMode == viewMode) sharedScope else null
-                            val activeAnimated = if (pageMode == viewMode) animatedScope else null
-                            when (pageMode) {
+                            when (DashboardViewMode.entries[page]) {
                         DashboardViewMode.CLASSIC -> {
                             // Classic View: Cards with full contribution grids
                         LazyColumn(
@@ -356,20 +344,25 @@ fun DashboardScreen(
                                 val habitLogs = logsByHabit[habit.id] ?: emptyList()
                                 val todayLog = habitLogs.firstOrNull { it.date == todayStr }
 
-                                HabitCard(
-                                    habit = habit,
-                                    logs = habitLogs,
-                                    todayLog = todayLog,
-                                    onCardClick = {
-                                        viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
-                                    },
-                                    onActionClick = {
-                                        viewModel.toggleHabitDay(habit, today)
-                                    },
-                                    modifier = Modifier.animateItem(),
-                                    sharedScope = activeScope,
-                                    animatedScope = activeAnimated
-                                )
+                                AnimatedVisibility(
+                                    visible = true,
+                                    enter = fadeIn() + slideInVertically(
+                                        initialOffsetY = { it / 3 }
+                                    ),
+                                    label = "habit_card_enter"
+                                ) {
+                                    HabitCard(
+                                        habit = habit,
+                                        logs = habitLogs,
+                                        todayLog = todayLog,
+                                        onCardClick = {
+                                            viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
+                                        },
+                                        onActionClick = {
+                                            viewModel.toggleHabitDay(habit, today)
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -477,6 +470,13 @@ fun DashboardScreen(
                                     val habitLogs = logsByHabit[habit.id] ?: emptyList()
                                     val logsMap = habitLogs.associateBy { it.date }
 
+                                    AnimatedVisibility(
+                                        visible = true,
+                                        enter = fadeIn() + slideInVertically(
+                                            initialOffsetY = { it / 3 }
+                                        ),
+                                        label = "habit_row_enter"
+                                    ) {
                                         CompactHabitRow(
                                             habit = habit,
                                             days = last5Days,
@@ -486,11 +486,9 @@ fun DashboardScreen(
                                             },
                                             onRowClick = {
                                                 viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
-                                            },
-                                            modifier = Modifier.animateItem(),
-                                            sharedScope = activeScope,
-                                            animatedScope = activeAnimated
+                                            }
                                         )
+                                    }
                                 }
                             }
                         }
@@ -514,13 +512,19 @@ fun DashboardScreen(
                                 val stats = viewModel.calculateStats(habit, habitLogs)
                                 val habitColor = Color(habit.colorHex)
 
-                                Card(
-                                    modifier = Modifier
-                                        .animateItem()
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
-                                        },
+                                AnimatedVisibility(
+                                    visible = true,
+                                    enter = fadeIn() + slideInVertically(
+                                        initialOffsetY = { it / 3 }
+                                    ),
+                                    label = "habit_split_enter"
+                                ) {
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
+                                            },
                                     shape = RoundedCornerShape(18.dp),
                                     colors = CardDefaults.cardColors(
                                         containerColor = MaterialTheme.colorScheme.surface
@@ -535,7 +539,6 @@ fun DashboardScreen(
                                     ) {
                                         Box(
                                             modifier = Modifier
-                                                .habitIconTransition(habit.id, activeScope, activeAnimated)
                                                 .size(42.dp)
                                                 .clip(RoundedCornerShape(12.dp))
                                                 .background(habitColor.copy(alpha = 0.16f)),
@@ -592,6 +595,7 @@ fun DashboardScreen(
                                             }
                                         )
                                     }
+                                }
                                 }
                             }
                         }
