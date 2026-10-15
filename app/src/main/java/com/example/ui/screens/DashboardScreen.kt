@@ -1,6 +1,10 @@
+@file:OptIn(androidx.compose.animation.ExperimentalSharedTransitionApi::class)
+
 package com.example.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -22,6 +26,9 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.animateItem
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,6 +36,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.LocalFireDepartment
@@ -44,11 +52,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -70,7 +80,7 @@ import com.example.ui.components.CompactHabitRow
 import com.example.ui.components.HabitActionButton
 import com.example.ui.components.HabitCard
 import com.example.ui.components.HabitIconCatalog
-import com.example.ui.components.SwipeableHabitItem
+import com.example.ui.components.habitIconTransition
 import com.example.ui.util.LocalBackdrop
 import com.example.ui.util.glassEffect
 import com.example.ui.util.softDropShadow
@@ -78,6 +88,7 @@ import com.kyant.backdrop.backdrops.layerBackdrop
 import com.example.ui.theme.BrandPrimary
 import com.example.ui.viewmodel.AppScreen
 import com.example.ui.viewmodel.DashboardViewMode
+import kotlinx.coroutines.flow.collect
 import com.example.ui.viewmodel.HabitViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -87,7 +98,9 @@ import java.util.Locale
 @Composable
 fun DashboardScreen(
     viewModel: HabitViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    sharedScope: SharedTransitionScope? = null,
+    animatedScope: AnimatedVisibilityScope? = null
 ) {
     val habits by viewModel.filteredHabits.collectAsState()
     val allLogs by viewModel.allLogs.collectAsState()
@@ -170,6 +183,14 @@ fun DashboardScreen(
                         contentDescription = "Statistics",
                         onClick = { viewModel.navigateTo(AppScreen.ANALYTICS) },
                         testTag = "analytics_button"
+                    )
+
+                    // Archived Button
+                    CircleIconButton(
+                        imageVector = Icons.Filled.Archive,
+                        contentDescription = "Archived habits",
+                        onClick = { viewModel.navigateTo(AppScreen.ARCHIVED) },
+                        testTag = "archived_button"
                     )
 
                     // Add Habit Button (Purple circle with plus)
@@ -288,7 +309,37 @@ fun DashboardScreen(
                                 )
                             }
                         }
-                    } else when (viewMode) {
+                    } else {
+                        // Swipe between views: pager pages map 1:1 to
+                        // DashboardViewMode entries (CLASSIC, COMPACT, SPLIT).
+                        val pagerState = rememberPagerState(
+                            initialPage = viewMode.ordinal
+                        ) { DashboardViewMode.entries.size }
+
+                        // Swipe gesture -> view model (drives the pill highlight).
+                        LaunchedEffect(pagerState) {
+                            snapshotFlow { pagerState.currentPage }.collect { page ->
+                                val mode = DashboardViewMode.entries[page]
+                                if (mode != viewMode) viewModel.setViewMode(mode)
+                            }
+                        }
+                        // Pill taps -> pager animation.
+                        LaunchedEffect(viewMode) {
+                            if (pagerState.currentPage != viewMode.ordinal) {
+                                pagerState.animateScrollToPage(viewMode.ordinal)
+                            }
+                        }
+
+                        HorizontalPager(
+                            state = pagerState,
+                            modifier = Modifier.fillMaxSize()
+                        ) { page ->
+                            val pageMode = DashboardViewMode.entries[page]
+                            // Only the visible page participates in hero morphs —
+                            // offscreen pages hold duplicate keys.
+                            val activeScope = if (pageMode == viewMode) sharedScope else null
+                            val activeAnimated = if (pageMode == viewMode) animatedScope else null
+                            when (pageMode) {
                         DashboardViewMode.CLASSIC -> {
                             // Classic View: Cards with full contribution grids
                         LazyColumn(
@@ -305,27 +356,20 @@ fun DashboardScreen(
                                 val habitLogs = logsByHabit[habit.id] ?: emptyList()
                                 val todayLog = habitLogs.firstOrNull { it.date == todayStr }
 
-                                SwipeableHabitItem(
-                                    onToggleToday = {
+                                HabitCard(
+                                    habit = habit,
+                                    logs = habitLogs,
+                                    todayLog = todayLog,
+                                    onCardClick = {
+                                        viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
+                                    },
+                                    onActionClick = {
                                         viewModel.toggleHabitDay(habit, today)
                                     },
-                                    onArchiveToggle = {
-                                        viewModel.toggleArchiveHabit(habit)
-                                    },
-                                    isArchived = habit.isArchived
-                                ) {
-                                    HabitCard(
-                                        habit = habit,
-                                        logs = habitLogs,
-                                        todayLog = todayLog,
-                                        onCardClick = {
-                                            viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
-                                        },
-                                        onActionClick = {
-                                            viewModel.toggleHabitDay(habit, today)
-                                        }
-                                    )
-                                }
+                                    modifier = Modifier.animateItem(),
+                                    sharedScope = activeScope,
+                                    animatedScope = activeAnimated
+                                )
                             }
                         }
                     }
@@ -433,16 +477,6 @@ fun DashboardScreen(
                                     val habitLogs = logsByHabit[habit.id] ?: emptyList()
                                     val logsMap = habitLogs.associateBy { it.date }
 
-                                    SwipeableHabitItem(
-                                        onToggleToday = {
-                                            viewModel.toggleHabitDay(habit, today)
-                                        },
-                                        onArchiveToggle = {
-                                            viewModel.toggleArchiveHabit(habit)
-                                        },
-                                        isArchived = habit.isArchived,
-                                        backgroundShape = RoundedCornerShape(16.dp)
-                                    ) {
                                         CompactHabitRow(
                                             habit = habit,
                                             days = last5Days,
@@ -452,9 +486,11 @@ fun DashboardScreen(
                                             },
                                             onRowClick = {
                                                 viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
-                                            }
+                                            },
+                                            modifier = Modifier.animateItem(),
+                                            sharedScope = activeScope,
+                                            animatedScope = activeAnimated
                                         )
-                                    }
                                 }
                             }
                         }
@@ -478,22 +514,13 @@ fun DashboardScreen(
                                 val stats = viewModel.calculateStats(habit, habitLogs)
                                 val habitColor = Color(habit.colorHex)
 
-                                SwipeableHabitItem(
-                                    onToggleToday = {
-                                        viewModel.toggleHabitDay(habit, today)
-                                    },
-                                    onArchiveToggle = {
-                                        viewModel.toggleArchiveHabit(habit)
-                                    },
-                                    isArchived = habit.isArchived,
-                                    backgroundShape = RoundedCornerShape(18.dp)
-                                ) {
-                                    Card(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable {
-                                                viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
-                                            },
+                                Card(
+                                    modifier = Modifier
+                                        .animateItem()
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
+                                        },
                                     shape = RoundedCornerShape(18.dp),
                                     colors = CardDefaults.cardColors(
                                         containerColor = MaterialTheme.colorScheme.surface
@@ -508,6 +535,7 @@ fun DashboardScreen(
                                     ) {
                                         Box(
                                             modifier = Modifier
+                                                .habitIconTransition(habit.id, activeScope, activeAnimated)
                                                 .size(42.dp)
                                                 .clip(RoundedCornerShape(12.dp))
                                                 .background(habitColor.copy(alpha = 0.16f)),
@@ -565,10 +593,11 @@ fun DashboardScreen(
                                         )
                                     }
                                 }
-                                }
                             }
                         }
                     }
+                    }
+                        }
                 }
             }
         }

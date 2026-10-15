@@ -33,11 +33,27 @@ object WidgetGlassBackground {
         dimColor: Int = Color.argb(122, 0, 0, 0)
     ): Bitmap? {
         return try {
-            val drawable = WallpaperManager.getInstance(context).drawable
-                ?: return null
-            val dw = drawable.intrinsicWidth
-            val dh = drawable.intrinsicHeight
-            if (dw <= 0 || dh <= 0) return null
+            val wm = WallpaperManager.getInstance(context)
+            // Live wallpapers make getDrawable() return null — fall back
+            // through peek and the built-in static wallpaper so glass still
+            // gets a blurred background instead of going flat.
+            var drawable = try { wm.drawable } catch (_: Throwable) { null }
+            if (drawable == null) {
+                drawable = try { wm.peekDrawable() } catch (_: Throwable) { null }
+            }
+            if (drawable == null) {
+                drawable = try { wm.builtInDrawable } catch (_: Throwable) { null }
+            }
+            drawable ?: return null
+            var dw = drawable.intrinsicWidth
+            var dh = drawable.intrinsicHeight
+            if (dw <= 0 || dh <= 0) {
+                // No intrinsic size (e.g. ColorDrawable): rasterize at screen
+                // size instead of giving up.
+                val metrics = context.resources.displayMetrics
+                dw = metrics.widthPixels.coerceAtLeast(targetWidth)
+                dh = metrics.heightPixels.coerceAtLeast(targetHeight)
+            }
 
             val targetAspect = targetWidth.toFloat() / targetHeight
             val srcAspect = dw.toFloat() / dh

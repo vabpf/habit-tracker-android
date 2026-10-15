@@ -1,6 +1,13 @@
+@file:OptIn(androidx.compose.animation.ExperimentalSharedTransitionApi::class)
+
 package com.example.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.LocalFireDepartment
@@ -45,6 +53,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,8 +69,13 @@ import com.example.data.model.TrackingType
 import com.example.ui.components.ContributionGrid
 import com.example.ui.components.CircleIconButton
 import com.example.ui.components.HabitIconCatalog
+import com.example.ui.components.habitIconTransition
+import com.example.ui.components.rememberShakeController
+import com.example.ui.components.shake
+import kotlinx.coroutines.launch
 import com.example.ui.components.MonthCalendarView
 import com.example.ui.theme.BrandPrimary
+import com.example.ui.theme.HabitCoral
 import com.example.ui.theme.LocalAppChrome
 import com.example.ui.viewmodel.AppScreen
 import com.example.ui.viewmodel.HabitViewModel
@@ -73,7 +87,9 @@ import java.time.format.DateTimeFormatter
 fun HabitDetailScreen(
     habitId: Long,
     viewModel: HabitViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    sharedScope: SharedTransitionScope? = null,
+    animatedScope: AnimatedVisibilityScope? = null
 ) {
     BackHandler {
         viewModel.navigateTo(AppScreen.DASHBOARD)
@@ -115,6 +131,13 @@ fun HabitDetailScreen(
     var showValueDialog by remember { mutableStateOf(false) }
     var valueTargetDate by remember { mutableStateOf(LocalDate.now()) }
     var valueInputText by remember { mutableStateOf("") }
+
+    // Permanent delete confirmation (archived habits)
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    // Shake feedback for non-numeric log amounts
+    val valueShake = rememberShakeController()
+    val shakeScope = rememberCoroutineScope()
 
     Box(
         modifier = modifier
@@ -167,15 +190,20 @@ fun HabitDetailScreen(
                             testTag = "notes_screen_button"
                         )
 
-                        // Archive / Restore button
-                        CircleIconButton(
-                            imageVector = if (habit.isArchived) Icons.Filled.Unarchive else Icons.Filled.Archive,
-                            contentDescription = if (habit.isArchived) "Restore Habit" else "Archive Habit",
-                            onClick = { viewModel.toggleArchiveHabit(habit) },
-                            iconSize = 18.dp,
-                            contentColor = if (habit.isArchived) Color(0xFFFCC419) else MaterialTheme.colorScheme.onSurface,
-                            testTag = "archive_habit_button"
-                        )
+                        // Archive / Restore button (icon morphs on toggle)
+                        AnimatedContent(
+                            targetState = habit.isArchived,
+                            label = "archive_icon_morph"
+                        ) { archived ->
+                            CircleIconButton(
+                                imageVector = if (archived) Icons.Filled.Unarchive else Icons.Filled.Archive,
+                                contentDescription = if (archived) "Restore Habit" else "Archive Habit",
+                                onClick = { viewModel.toggleArchiveHabit(habit) },
+                                iconSize = 18.dp,
+                                contentColor = if (archived) Color(0xFFFCC419) else MaterialTheme.colorScheme.onSurface,
+                                testTag = "archive_habit_button"
+                            )
+                        }
 
                         // Edit button
                         CircleIconButton(
@@ -197,6 +225,7 @@ fun HabitDetailScreen(
                 ) {
                     Box(
                         modifier = Modifier
+                            .habitIconTransition(habit.id, sharedScope, animatedScope)
                             .size(52.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(habitColor.copy(alpha = 0.16f))
@@ -228,6 +257,31 @@ fun HabitDetailScreen(
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+                            )
+                        }
+                    }
+
+                    // Archived habits: no complete action — restore or delete.
+                    if (habit.isArchived) {
+                        Spacer(modifier = Modifier.weight(1f))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            CircleIconButton(
+                                imageVector = Icons.Filled.Unarchive,
+                                contentDescription = "Restore habit",
+                                onClick = { viewModel.toggleArchiveHabit(habit) },
+                                size = 44.dp,
+                                iconSize = 20.dp,
+                                testTag = "detail_unarchive_button"
+                            )
+                            CircleIconButton(
+                                imageVector = Icons.Filled.Delete,
+                                contentDescription = "Delete habit",
+                                onClick = { showDeleteConfirm = true },
+                                size = 44.dp,
+                                iconSize = 20.dp,
+                                containerColor = LocalAppChrome.current.dangerContainer,
+                                contentColor = HabitCoral,
+                                testTag = "detail_delete_button"
                             )
                         }
                     }
@@ -266,8 +320,13 @@ fun HabitDetailScreen(
                 }
             }
 
-            // Streak & Info Badges Row (Screenshot 3 & 6)
+            // Streak & Info Badges Row (streak ticks up/down on change)
             item {
+                val animatedStreak by animateIntAsState(
+                    targetValue = stats.currentStreak,
+                    animationSpec = spring(dampingRatio = 0.7f, stiffness = 300f),
+                    label = "streak_tick"
+                )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -275,9 +334,9 @@ fun HabitDetailScreen(
                     // Current Streak Pill
                     Row(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(14.dp))
+                            .clip(CircleShape)
                             .background(LocalAppChrome.current.containerAlt)
-                            .border(1.dp, habitColor.copy(alpha = 0.3f), RoundedCornerShape(14.dp))
+                            .border(1.dp, habitColor.copy(alpha = 0.3f), CircleShape)
                             .padding(horizontal = 14.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -285,12 +344,12 @@ fun HabitDetailScreen(
                             imageVector = Icons.Filled.LocalFireDepartment,
                             contentDescription = "Streak",
                             tint = habitColor,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "${stats.currentStreak}",
-                            style = MaterialTheme.typography.titleMedium.copy(
+                            text = "$animatedStreak",
+                            style = MaterialTheme.typography.bodyMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = habitColor
                             )
@@ -300,9 +359,9 @@ fun HabitDetailScreen(
                     // Frequency Pill
                     Row(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(14.dp))
+                            .clip(CircleShape)
                             .background(LocalAppChrome.current.containerAlt)
-                            .border(1.dp, LocalAppChrome.current.border, RoundedCornerShape(14.dp))
+                            .border(1.dp, LocalAppChrome.current.border, CircleShape)
                             .padding(horizontal = 14.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -325,9 +384,9 @@ fun HabitDetailScreen(
                     // Best Streak Pill
                     Row(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(14.dp))
+                            .clip(CircleShape)
                             .background(LocalAppChrome.current.containerAlt)
-                            .border(1.dp, LocalAppChrome.current.border, RoundedCornerShape(14.dp))
+                            .border(1.dp, LocalAppChrome.current.border, CircleShape)
                             .padding(horizontal = 14.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -564,6 +623,7 @@ fun HabitDetailScreen(
                         singleLine = true,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .shake(valueShake)
                             .testTag("value_input_field"),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = LocalAppChrome.current.container,
@@ -577,9 +637,13 @@ fun HabitDetailScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        val num = valueInputText.toFloatOrNull() ?: 0f
-                        viewModel.setHabitDayValue(habit, valueTargetDate, num)
-                        showValueDialog = false
+                        val num = valueInputText.toFloatOrNull()
+                        if (num == null) {
+                            shakeScope.launch { valueShake.shake() }
+                        } else {
+                            viewModel.setHabitDayValue(habit, valueTargetDate, num)
+                            showValueDialog = false
+                        }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = BrandPrimary)
                 ) {
@@ -588,6 +652,45 @@ fun HabitDetailScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showValueDialog = false }) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    }
+
+    // Permanent delete confirmation
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = {
+                Text(
+                    text = "Delete \"${habit.name}\"?",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                )
+            },
+            text = {
+                Text(
+                    text = "This permanently removes the habit with all its logs and notes. This cannot be undone.",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteHabit(habit)
+                        showDeleteConfirm = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = HabitCoral),
+                    modifier = Modifier.testTag("confirm_delete_button")
+                ) {
+                    Text("Delete", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
                     Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },

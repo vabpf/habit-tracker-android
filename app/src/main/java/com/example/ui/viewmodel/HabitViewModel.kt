@@ -37,7 +37,8 @@ enum class AppScreen {
     REMINDERS,
     EDIT_HABIT,
     SETTINGS,
-    BADGES
+    BADGES,
+    ARCHIVED
 }
 
 enum class DashboardViewMode {
@@ -62,7 +63,7 @@ data class HabitUiState(
     val filteredHabits: List<Habit> = emptyList(),
     val allLogs: List<HabitLog> = emptyList(),
     val selectedCategory: String = "All",
-    val availableCategories: List<String> = listOf("All", "Fitness", "Health", "Mind", "Hobbies", "Archived"),
+    val availableCategories: List<String> = listOf("All", "Fitness", "Health", "Mind", "Hobbies"),
     val selectedHabitId: Long? = null,
     val selectedHabit: Habit? = null,
     val viewMode: DashboardViewMode = DashboardViewMode.CLASSIC,

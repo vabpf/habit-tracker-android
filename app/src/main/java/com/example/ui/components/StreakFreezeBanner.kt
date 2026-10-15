@@ -1,6 +1,5 @@
 package com.example.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -99,7 +98,7 @@ fun StreakFreezeBanner(
 
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(10.dp))
+                .clip(CircleShape)
                 .background(Color(0xFF0288D1).copy(alpha = 0.3f))
                 .padding(horizontal = 10.dp, vertical = 6.dp)
         ) {

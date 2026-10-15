@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.animation.ExperimentalSharedTransitionApi::class)
+
 package com.example.ui.components
 
 import androidx.compose.foundation.background
@@ -17,6 +19,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,7 +41,9 @@ fun HabitCard(
     todayLog: HabitLog?,
     onCardClick: () -> Unit,
     onActionClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    sharedScope: SharedTransitionScope? = null,
+    animatedScope: AnimatedVisibilityScope? = null
 ) {
     val habitColor = Color(habit.colorHex)
     val isCompletedToday = todayLog?.isCompleted == true
@@ -63,9 +69,10 @@ fun HabitCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Habit Icon Badge
+                // Habit Icon Badge (hero morphs into the detail header)
                 Box(
                     modifier = Modifier
+                        .habitIconTransition(habit.id, sharedScope, animatedScope)
                         .size(44.dp)
                         .clip(RoundedCornerShape(14.dp))
                         .background(habitColor.copy(alpha = 0.16f))

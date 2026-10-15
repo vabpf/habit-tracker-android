@@ -1,6 +1,7 @@
 package com.example.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
@@ -26,6 +27,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +52,10 @@ fun MilestoneCelebrationDialog(
     onDismiss: () -> Unit
 ) {
     if (badge == null) return
+
+    // Springy pop-in for the badge medallion (plays on show).
+    var medallionShown by remember { mutableStateOf(false) }
+    LaunchedEffect(badge) { medallionShown = true }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -77,28 +87,36 @@ fun MilestoneCelebrationDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Sparkling Badge Icon Container
-                Box(
-                    modifier = Modifier
-                        .size(88.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.radialGradient(
-                                colors = listOf(Color(0xFFFFD54F), Color(0xFFFF8F00).copy(alpha = 0.4f), Color.Transparent)
-                            )
-                        )
-                        .border(2.dp, Color(0xFFFFD54F), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = when (badge.iconName) {
-                            "fire" -> Icons.Filled.LocalFireDepartment
-                            "star" -> Icons.Filled.Stars
-                            else -> Icons.Filled.EmojiEvents
-                        },
-                        contentDescription = badge.title,
-                        tint = Color(0xFFFFD54F),
-                        modifier = Modifier.size(46.dp)
+                AnimatedVisibility(
+                    visible = medallionShown,
+                    enter = fadeIn() + scaleIn(
+                        initialScale = 0.6f,
+                        animationSpec = spring(dampingRatio = 0.5f, stiffness = 300f)
                     )
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(88.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.radialGradient(
+                                    colors = listOf(Color(0xFFFFD54F), Color(0xFFFF8F00).copy(alpha = 0.4f), Color.Transparent)
+                                )
+                            )
+                            .border(2.dp, Color(0xFFFFD54F), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = when (badge.iconName) {
+                                "fire" -> Icons.Filled.LocalFireDepartment
+                                "star" -> Icons.Filled.Stars
+                                else -> Icons.Filled.EmojiEvents
+                            },
+                            contentDescription = badge.title,
+                            tint = Color(0xFFFFD54F),
+                            modifier = Modifier.size(46.dp)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(18.dp))

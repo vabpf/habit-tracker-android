@@ -239,9 +239,9 @@ fun MonthCalendarView(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(CircleShape)
                     .background(LocalAppChrome.current.container)
-                    .border(1.dp, LocalAppChrome.current.border, RoundedCornerShape(12.dp))
+                    .border(1.dp, LocalAppChrome.current.border, CircleShape)
                     .padding(horizontal = 12.dp, vertical = 7.dp)
             ) {
                 Icon(

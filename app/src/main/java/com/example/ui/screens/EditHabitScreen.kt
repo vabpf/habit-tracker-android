@@ -41,6 +41,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,6 +55,9 @@ import com.example.data.model.Habit
 import com.example.data.model.HabitType
 import com.example.data.model.TrackingType
 import com.example.ui.components.HabitIconCatalog
+import com.example.ui.components.rememberShakeController
+import com.example.ui.components.shake
+import kotlinx.coroutines.launch
 import com.example.ui.theme.BrandPrimary
 import com.example.ui.theme.HabitAmber
 import com.example.ui.theme.HabitCoral
@@ -96,6 +100,10 @@ fun EditHabitScreen(
     var unit by remember(editingHabit) { mutableStateOf(editingHabit?.unit ?: "") }
     var frequencyDays by remember(editingHabit) { mutableIntStateOf(editingHabit?.frequencyDaysPerWeek ?: 7) }
     var category by remember(editingHabit) { mutableStateOf(editingHabit?.category ?: "Health") }
+
+    // Shake feedback for invalid input (blank name)
+    val nameShake = rememberShakeController()
+    val shakeScope = rememberCoroutineScope()
 
     val currentColor = Color(colorHex)
 
@@ -273,6 +281,7 @@ fun EditHabitScreen(
                         singleLine = true,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .shake(nameShake)
                             .testTag("habit_name_input"),
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -574,7 +583,9 @@ fun EditHabitScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = {
-                        if (name.isNotBlank()) {
+                        if (name.isBlank()) {
+                            shakeScope.launch { nameShake.shake() }
+                        } else {
                             val habitToSave = editingHabit?.copy(
                                 name = name,
                                 description = description,

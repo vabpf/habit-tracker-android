@@ -47,7 +47,7 @@ class ExampleRobolectricTest {
     fun `unified ui state model contains expected defaults`() {
         val state = HabitUiState()
         assertEquals("All", state.selectedCategory)
-        assertTrue(state.availableCategories.contains("Archived"))
+        assertFalse(state.availableCategories.contains("Archived"))
         assertTrue(state.habits.isEmpty())
         assertFalse(state.isLoading)
     }

@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.animation.ExperimentalSharedTransitionApi::class)
+
 package com.example
 
 import android.app.Activity
@@ -9,7 +11,16 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideIntoContainer
+import androidx.compose.animation.slideOutOfContainer
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -26,6 +37,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.screens.AnalyticsScreen
+import com.example.ui.screens.ArchivedScreen
 import com.example.ui.screens.DashboardScreen
 import com.example.ui.screens.EditHabitScreen
 import com.example.ui.screens.HabitDetailScreen
@@ -82,34 +94,76 @@ class MainActivity : ComponentActivity() {
                 val contentBackdrop = rememberLayerBackdrop()
                 CompositionLocalProvider(LocalBackdrop provides contentBackdrop) {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    Crossfade(targetState = currentScreen, label = "screen_transition") { screen ->
-                        when (screen) {
-                            AppScreen.DASHBOARD -> {
-                                DashboardScreen(viewModel = viewModel)
-                            }
-                            AppScreen.HABIT_DETAIL -> {
-                                val habitId = selectedHabitId ?: 1L
-                                HabitDetailScreen(habitId = habitId, viewModel = viewModel)
-                            }
-                            AppScreen.ANALYTICS -> {
-                                AnalyticsScreen(viewModel = viewModel)
-                            }
-                            AppScreen.NOTES -> {
-                                val habitId = selectedHabitId ?: 1L
-                                NotesScreen(habitId = habitId, viewModel = viewModel)
-                            }
-                            AppScreen.REMINDERS -> {
-                                val habitId = selectedHabitId ?: 1L
-                                RemindersScreen(habitId = habitId, viewModel = viewModel)
-                            }
-                            AppScreen.EDIT_HABIT -> {
-                                EditHabitScreen(viewModel = viewModel)
-                            }
-                            AppScreen.SETTINGS -> {
-                                SettingsScreen(viewModel = viewModel)
-                            }
-                            AppScreen.BADGES -> {
-                                com.example.ui.screens.BadgesScreen(viewModel = viewModel)
+                    // Drill navigation: push deeper screens in from the right,
+                    // pop back to top-level screens toward the right.
+                    // SharedTransitionLayout enables hero morphs (e.g. habit
+                    // cards into the detail header) on top of the slide.
+                    SharedTransitionLayout {
+                        val sharedScope = this
+                        AnimatedContent(
+                            targetState = currentScreen,
+                            transitionSpec = {
+                                val drillScreens = setOf(
+                                    AppScreen.HABIT_DETAIL,
+                                    AppScreen.NOTES,
+                                    AppScreen.REMINDERS,
+                                    AppScreen.EDIT_HABIT
+                                )
+                                val forward = targetState in drillScreens
+                                val towards = if (forward) {
+                                    AnimatedContentTransitionScope.SlideDirection.Start
+                                } else {
+                                    AnimatedContentTransitionScope.SlideDirection.End
+                                }
+                                (fadeIn(animationSpec = tween(220)) +
+                                    slideIntoContainer(towards, tween(220))
+                                    ) togetherWith
+                                    (fadeOut(animationSpec = tween(180)) +
+                                        slideOutOfContainer(towards, tween(180)))
+                            },
+                            label = "screen_transition"
+                        ) { screen ->
+                            val animatedScope: AnimatedVisibilityScope = this
+                            when (screen) {
+                                AppScreen.DASHBOARD -> {
+                                    DashboardScreen(
+                                        viewModel = viewModel,
+                                        sharedScope = sharedScope,
+                                        animatedScope = animatedScope
+                                    )
+                                }
+                                AppScreen.HABIT_DETAIL -> {
+                                    val habitId = selectedHabitId ?: 1L
+                                    HabitDetailScreen(
+                                        habitId = habitId,
+                                        viewModel = viewModel,
+                                        sharedScope = sharedScope,
+                                        animatedScope = animatedScope
+                                    )
+                                }
+                                AppScreen.ANALYTICS -> {
+                                    AnalyticsScreen(viewModel = viewModel)
+                                }
+                                AppScreen.NOTES -> {
+                                    val habitId = selectedHabitId ?: 1L
+                                    NotesScreen(habitId = habitId, viewModel = viewModel)
+                                }
+                                AppScreen.REMINDERS -> {
+                                    val habitId = selectedHabitId ?: 1L
+                                    RemindersScreen(habitId = habitId, viewModel = viewModel)
+                                }
+                                AppScreen.EDIT_HABIT -> {
+                                    EditHabitScreen(viewModel = viewModel)
+                                }
+                                AppScreen.SETTINGS -> {
+                                    SettingsScreen(viewModel = viewModel)
+                                }
+                                AppScreen.BADGES -> {
+                                    com.example.ui.screens.BadgesScreen(viewModel = viewModel)
+                                }
+                                AppScreen.ARCHIVED -> {
+                                    ArchivedScreen(viewModel = viewModel)
+                                }
                             }
                         }
                     }

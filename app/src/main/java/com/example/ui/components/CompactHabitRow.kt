@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.animation.ExperimentalSharedTransitionApi::class)
+
 package com.example.ui.components
 
 import androidx.compose.foundation.background
@@ -17,6 +19,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,7 +46,9 @@ fun CompactHabitRow(
     logsMap: Map<String, HabitLog>,
     onDayClick: (LocalDate) -> Unit,
     onRowClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    sharedScope: SharedTransitionScope? = null,
+    animatedScope: AnimatedVisibilityScope? = null
 ) {
     val habitColor = Color(habit.colorHex)
     val formatter = DateTimeFormatter.ISO_LOCAL_DATE
@@ -54,9 +60,10 @@ fun CompactHabitRow(
             .padding(vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Icon Badge
+        // Icon Badge (hero morphs into the detail header)
         Box(
             modifier = Modifier
+                .habitIconTransition(habit.id, sharedScope, animatedScope)
                 .size(36.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .background(habitColor.copy(alpha = 0.16f)),
