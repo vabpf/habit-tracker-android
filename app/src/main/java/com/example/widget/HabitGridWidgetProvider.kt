@@ -116,14 +116,6 @@ class HabitGridWidgetProvider : AppWidgetProvider() {
     ): RemoteViews? {
         val views = RemoteViews(context.packageName, R.layout.widget_habit_grid)
 
-        val glassBg = WidgetGlassBackground.render(context)
-        if (glassBg != null) {
-            views.setViewVisibility(R.id.widget_glass_bg, View.VISIBLE)
-            views.setImageViewBitmap(R.id.widget_glass_bg, glassBg)
-        } else {
-            views.setViewVisibility(R.id.widget_glass_bg, View.GONE)
-        }
-
         val appIntent = Intent(context, MainActivity::class.java)
         val appPendingIntent = PendingIntent.getActivity(
             context,

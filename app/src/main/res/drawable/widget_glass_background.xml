@@ -4,10 +4,12 @@
      Mirrors FrostGlassDefaults (dark) from the in-app glass effect. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Base: dark fill at ~72% opacity -->
+    <!-- Base: dark fill at ~55% so the live wallpaper reads through
+         like frosted glass (the launcher composites it for real, so it
+         always aligns — no bitmap copy can do that). -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#B816181F" />
+            <solid android:color="#8C16181F" />
             <corners android:radius="22dp" />
         </shape>
     </item>

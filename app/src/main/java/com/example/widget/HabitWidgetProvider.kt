@@ -6,7 +6,6 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
 import android.view.View
 import android.widget.RemoteViews
 import com.example.MainActivity
@@ -63,13 +62,9 @@ class HabitWidgetProvider : AppWidgetProvider() {
                     habit.id to WidgetData.calculateStreak(habit, habitLogs)
                 }
 
-                // Blurred-wallpaper glass (rendered on IO; falls back to
-                // the static translucent card when unavailable).
-                val glassBg = WidgetGlassBackground.render(context)
-
                 withContext(Dispatchers.Main) {
                     for (appWidgetId in appWidgetIds) {
-                        renderWidget(context, appWidgetManager, appWidgetId, habits, completedHabitIds, habitStreaks, glassBg)
+                        renderWidget(context, appWidgetManager, appWidgetId, habits, completedHabitIds, habitStreaks)
                     }
                 }
             } catch (e: Exception) {
@@ -106,17 +101,9 @@ class HabitWidgetProvider : AppWidgetProvider() {
         appWidgetId: Int,
         habits: List<Habit>,
         completedHabitIds: Set<Long>,
-        habitStreaks: Map<Long, Int>,
-        glassBg: Bitmap?
+        habitStreaks: Map<Long, Int>
     ) {
         val views = RemoteViews(context.packageName, R.layout.widget_habit_tracker)
-
-        if (glassBg != null) {
-            views.setViewVisibility(R.id.widget_glass_bg, View.VISIBLE)
-            views.setImageViewBitmap(R.id.widget_glass_bg, glassBg)
-        } else {
-            views.setViewVisibility(R.id.widget_glass_bg, View.GONE)
-        }
 
         // Launch MainActivity when clicking the header or empty state
         val appIntent = Intent(context, MainActivity::class.java)
