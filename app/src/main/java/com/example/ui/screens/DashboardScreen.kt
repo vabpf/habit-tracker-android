@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.animateEnterExit
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.lazy.items
@@ -355,11 +354,7 @@ fun DashboardScreen(
                                     onActionClick = {
                                         viewModel.toggleHabitDay(habit, today)
                                     },
-                                    modifier = Modifier.animateEnterExit(
-                                        enter = fadeIn() + slideInVertically(
-                                            initialOffsetY = { it / 3 }
-                                        )
-                                    )
+                                    modifier = Modifier.listItemEnter()
                                 )
                             }
                         }
@@ -511,11 +506,7 @@ fun DashboardScreen(
 
                                 Card(
                                     modifier = Modifier
-                                        .animateEnterExit(
-                                            enter = fadeIn() + slideInVertically(
-                                                initialOffsetY = { it / 3 }
-                                            )
-                                        )
+                                        .listItemEnter()
                                         .fillMaxWidth()
                                         .clickable {
                                             viewModel.navigateTo(AppScreen.HABIT_DETAIL, habit.id)
