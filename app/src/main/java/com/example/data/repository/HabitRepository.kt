@@ -6,6 +6,8 @@ import com.example.data.local.HabitNoteDao
 import com.example.data.local.HabitReminderDao
 import com.example.data.model.Habit
 import com.example.data.model.HabitLog
+import com.example.data.model.HabitNote
+import com.example.data.model.HabitReminder
 import com.example.data.model.HabitType
 import kotlinx.coroutines.flow.Flow
 
