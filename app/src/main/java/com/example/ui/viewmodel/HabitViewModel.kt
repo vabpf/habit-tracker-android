@@ -601,14 +601,6 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun reloadSampleData() {
-        viewModelScope.launch {
-            repository.reloadSampleData()
-            _userMessage.value = "Demo habits reloaded"
-            _currentScreen.value = AppScreen.DASHBOARD
-        }
-    }
-
     // STREAK & STATS COMPUTATIONS
     fun calculateStats(habit: Habit, logs: List<HabitLog>, year: Int = LocalDate.now().year): HabitStats {
         val habitLogs = logs.filter { it.habitId == habit.id }

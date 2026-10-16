@@ -243,17 +243,12 @@ class HabitRepository(
         return "${payload.habits.size} habits, ${payload.logs.size} logs restored"
     }
 
-    suspend fun reloadSampleData() {
-        clearAllData()
-        seedDataInternal()
-    }
-
+    /**
+     * First-run seeding only: fills sample habits when the database is
+     * empty. Never touches existing user data.
+     */
     suspend fun seedInitialDataIfEmpty() {
         if (habitDao.getHabitCount() > 0) return
-        seedDataInternal()
-    }
-
-    private suspend fun seedDataInternal() {
 
         val initialHabits = listOf(
             Habit(
