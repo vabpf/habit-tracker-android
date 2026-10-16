@@ -560,14 +560,14 @@ fun SettingsScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
-                                    text = "Room Database Management",
+                                    text = "Data & Backup",
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                 )
                                 Text(
-                                    text = "Manage local SQLite persistent data on this device.",
+                                    text = "Keep a copy of your habits, or start fresh.",
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
