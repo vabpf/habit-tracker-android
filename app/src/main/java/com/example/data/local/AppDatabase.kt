@@ -47,7 +47,7 @@ class Converters {
         StreakFreezeState::class,
         UnlockedBadge::class
     ],
-    version = 2,
+    version = 1,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

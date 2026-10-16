@@ -92,7 +92,6 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
         )
 
         viewModelScope.launch {
-            repository.seedInitialDataIfEmpty()
             NotificationHelper.createNotificationChannel(application)
         }
     }

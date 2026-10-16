@@ -57,9 +57,6 @@ interface HabitDao {
 
     @Query("DELETE FROM habits")
     suspend fun deleteAllHabits()
-
-    @Query("SELECT COUNT(*) FROM habits")
-    suspend fun getHabitCount(): Int
 }
 
 @Dao
