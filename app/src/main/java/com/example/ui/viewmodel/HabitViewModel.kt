@@ -559,6 +559,45 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
             _selectedHabitId.value = null
             _userMessage.value = "Database cleared"
             _currentScreen.value = AppScreen.DASHBOARD
+            HabitWidgetProvider.updateAllWidgets(getApplication())
+            HabitGridWidgetProvider.updateAllGridWidgets(getApplication())
+        }
+    }
+
+    /** Writes a JSON backup to the user-chosen [uri] (Storage Access). */
+    fun exportBackupTo(uri: android.net.Uri) {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val json = repository.exportBackup()
+                getApplication<Application>().contentResolver
+                    .openOutputStream(uri)?.use { out ->
+                        out.write(json.toByteArray())
+                    }
+                    ?: throw IllegalStateException("Cannot open file for writing")
+                _userMessage.value = "Backup exported"
+            } catch (e: Exception) {
+                _userMessage.value = "Export failed: ${e.message}"
+            }
+        }
+    }
+
+    /** Replaces the database with the JSON backup at [uri]. */
+    fun importBackupFrom(uri: android.net.Uri) {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val json = getApplication<Application>().contentResolver
+                    .openInputStream(uri)?.use { input ->
+                        input.bufferedReader().readText()
+                    } ?: throw IllegalStateException("Cannot open file for reading")
+                val summary = repository.importBackup(json)
+                _selectedHabitId.value = null
+                _userMessage.value = "Backup imported ($summary)"
+                _currentScreen.value = AppScreen.DASHBOARD
+                HabitWidgetProvider.updateAllWidgets(getApplication())
+                HabitGridWidgetProvider.updateAllGridWidgets(getApplication())
+            } catch (e: Exception) {
+                _userMessage.value = "Import failed: ${e.message}"
+            }
         }
     }
 

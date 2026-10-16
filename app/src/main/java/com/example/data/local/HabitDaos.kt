@@ -103,6 +103,9 @@ interface HabitNoteDao {
     @Query("SELECT * FROM habit_notes WHERE habitId = :habitId AND date = :date LIMIT 1")
     fun getNoteForDate(habitId: Long, date: String): Flow<HabitNote?>
 
+    @Query("SELECT * FROM habit_notes ORDER BY habitId ASC, date DESC")
+    suspend fun getAllNotesOnce(): List<HabitNote>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertNote(note: HabitNote): Long
 
@@ -126,6 +129,9 @@ interface HabitNoteDao {
 interface HabitReminderDao {
     @Query("SELECT * FROM habit_reminders WHERE habitId = :habitId ORDER BY hour ASC, minute ASC")
     fun getRemindersForHabit(habitId: Long): Flow<List<HabitReminder>>
+
+    @Query("SELECT * FROM habit_reminders ORDER BY habitId ASC, hour ASC, minute ASC")
+    suspend fun getAllRemindersOnce(): List<HabitReminder>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertReminder(reminder: HabitReminder): Long

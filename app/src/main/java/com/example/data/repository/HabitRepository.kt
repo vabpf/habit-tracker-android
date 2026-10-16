@@ -215,6 +215,34 @@ class HabitRepository(
         )
     }
 
+    /** Serializes the whole database to a JSON backup string. */
+    suspend fun exportBackup(): String {
+        return HabitBackup.export(
+            habits = habitDao.getAllHabitsOnce(),
+            logs = habitLogDao.getAllLogsOnce(),
+            notes = habitNoteDao.getAllNotesOnce(),
+            reminders = habitReminderDao.getAllRemindersOnce(),
+            badges = badgeDao.getAllUnlockedBadgesOnce(),
+            freezeState = streakFreezeDao.getStreakFreezeStateOnce()
+        )
+    }
+
+    /**
+     * Replaces the whole database with a JSON backup.
+     * @return human-readable summary. Throws on invalid content.
+     */
+    suspend fun importBackup(json: String): String {
+        val payload = HabitBackup.parse(json)
+        clearAllData()
+        if (payload.habits.isNotEmpty()) habitDao.insertHabits(payload.habits)
+        if (payload.logs.isNotEmpty()) habitLogDao.insertLogs(payload.logs)
+        if (payload.notes.isNotEmpty()) habitNoteDao.insertNotes(payload.notes)
+        if (payload.reminders.isNotEmpty()) habitReminderDao.insertReminders(payload.reminders)
+        payload.badges.forEach { badgeDao.unlockBadge(it) }
+        payload.freezeState?.let { streakFreezeDao.insertOrUpdateStreakFreeze(it) }
+        return "${payload.habits.size} habits, ${payload.logs.size} logs restored"
+    }
+
     suspend fun reloadSampleData() {
         clearAllData()
         seedDataInternal()

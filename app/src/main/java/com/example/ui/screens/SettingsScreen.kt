@@ -1,7 +1,8 @@
 package com.example.ui.screens
 
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,27 +30,34 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DesktopWindows
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Widgets
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -74,12 +82,25 @@ fun SettingsScreen(
         viewModel.navigateTo(AppScreen.DASHBOARD)
     }
 
-    val context = LocalContext.current
     val currentTheme by viewModel.themeMode.collectAsState()
     val habits by viewModel.allHabits.collectAsState()
     val allLogs by viewModel.allLogs.collectAsState()
 
     val featuredHabit = habits.firstOrNull()
+
+    var showDeleteDbConfirm by remember { mutableStateOf(false) }
+
+    // Storage Access launchers for backup export / import.
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri != null) viewModel.exportBackupTo(uri)
+    }
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) viewModel.importBackupFrom(uri)
+    }
 
     Box(
         modifier = modifier
@@ -556,18 +577,124 @@ fun SettingsScreen(
 
                         Spacer(modifier = Modifier.height(14.dp))
 
-                        // Clear Database Button
+                        // Export Backup Button
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(LocalAppChrome.current.infoContainer)
+                                .border(1.dp, LocalAppChrome.current.infoBorder, RoundedCornerShape(12.dp))
+                                .clickable {
+                                    val stamp = java.time.LocalDate.now().toString()
+                                    exportLauncher.launch("habit-tracker-backup-$stamp.json")
+                                }
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(LocalAppChrome.current.infoText.copy(alpha = 0.16f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.FileDownload,
+                                    contentDescription = null,
+                                    tint = LocalAppChrome.current.infoText,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Export Backup",
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = LocalAppChrome.current.infoText
+                                    )
+                                )
+                                Text(
+                                    text = "Save habits, logs, and notes as a JSON file.",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = LocalAppChrome.current.infoSubText
+                                    )
+                                )
+                            }
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = LocalAppChrome.current.infoText,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Import Backup Button
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(LocalAppChrome.current.infoContainer)
+                                .border(1.dp, LocalAppChrome.current.infoBorder, RoundedCornerShape(12.dp))
+                                .clickable {
+                                    importLauncher.launch(arrayOf("application/json"))
+                                }
+                                .padding(horizontal = 14.dp, vertical = 12.dp)
+                                .testTag("import_backup_row"),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(LocalAppChrome.current.infoText.copy(alpha = 0.16f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.FileUpload,
+                                    contentDescription = null,
+                                    tint = LocalAppChrome.current.infoText,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Import Backup",
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = LocalAppChrome.current.infoText
+                                    )
+                                )
+                                Text(
+                                    text = "Restore everything from a backup file. Replaces current data.",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = LocalAppChrome.current.infoSubText
+                                    )
+                                )
+                            }
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = LocalAppChrome.current.infoText,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Clear Database Button (asks first)
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(LocalAppChrome.current.dangerContainer)
                                 .border(1.dp, LocalAppChrome.current.dangerBorder, RoundedCornerShape(12.dp))
-                                .clickable {
-                                    viewModel.clearAllData()
-                                    Toast.makeText(context, "Room database cleared! Starting blank.", Toast.LENGTH_SHORT).show()
-                                }
-                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                                .clickable { showDeleteDbConfirm = true }
+                                .padding(horizontal = 14.dp, vertical = 12.dp)
+                                .testTag("clear_data_row"),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Box(
@@ -615,5 +742,44 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
+    }
+
+    // Delete-all confirmation (destructive — always ask first)
+    if (showDeleteDbConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDbConfirm = false },
+            title = {
+                Text(
+                    text = "Delete everything?",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                )
+            },
+            text = {
+                Text(
+                    text = "This permanently removes all habits, logs, notes, and reminders. Export a backup first if you might want it back.",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.clearAllData()
+                        showDeleteDbConfirm = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = HabitCoral),
+                    modifier = Modifier.testTag("confirm_clear_data_button")
+                ) {
+                    Text("Delete all", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDbConfirm = false }) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     }
 }
